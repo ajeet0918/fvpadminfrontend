@@ -1,0 +1,346 @@
+/// <reference types="vite/client" />
+import axios from "axios";
+import { clearAccessToken, getAccessToken } from "./auth";
+import type {
+  AdminProduct,
+  AdminRole,
+  AdminUser,
+  Category,
+  Inquiry,
+  InquiryType,
+  InquiryStatus,
+  Lead,
+  LeadStatus,
+  LoginResponse,
+  OwnerOption,
+  Order,
+  OrderStatus,
+  PaymentStatus,
+  VerificationStatus
+} from "../types/domain";
+
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+if (!apiBaseUrl) {
+  throw new Error("Missing VITE_API_BASE_URL. Set it in admin-frontend/.env");
+}
+
+export const API_BASE_URL = apiBaseUrl;
+
+const apiClient = axios.create({
+  baseURL: API_BASE_URL
+});
+
+apiClient.interceptors.request.use((config) => {
+  const token = getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      clearAccessToken();
+    }
+    return Promise.reject(error);
+  }
+);
+
+export async function loginApi(payload: { username: string; password: string }) {
+  const response = await axios.post<LoginResponse>(`${API_BASE_URL}/auth/login`, payload);
+  return response.data;
+}
+
+export async function fetchOrdersApi() {
+  const response = await apiClient.get<Order[]>("/orders");
+  return response.data;
+}
+
+export async function fetchOrderApi(id: number) {
+  const response = await apiClient.get<Order>(`/orders/${id}`);
+  return response.data;
+}
+
+export async function quoteOrderApi(orderId: number, payload: {
+  quoteReference: string;
+  adminNotes: string;
+  shippingAmount: number;
+  taxAmount?: number | null;
+  discountAmount?: number | null;
+  items: Array<{ itemId: number; unitPrice: number; taxRate?: number | null; discountRate?: number | null }>;
+}) {
+  const response = await apiClient.post<Order>(`/orders/${orderId}/quote`, payload);
+  return response.data;
+}
+
+export async function updateOrderStatusApi(orderId: number, payload: { status: OrderStatus; adminNotes: string }) {
+  const response = await apiClient.patch<Order>(`/orders/${orderId}/status`, payload);
+  return response.data;
+}
+
+export async function fetchAdminRolesApi() {
+  const response = await apiClient.get<AdminRole[]>("/admin/roles");
+  return response.data;
+}
+
+export async function fetchAssignableOwnersApi() {
+  const response = await apiClient.get<OwnerOption[]>("/admin/owners");
+  return response.data;
+}
+
+export async function fetchAdminUsersApi() {
+  const response = await apiClient.get<AdminUser[]>("/admin/users");
+  return response.data;
+}
+
+export async function fetchAdminUsersWithFiltersApi(filters: {
+  search?: string;
+  status?: "ACTIVE" | "INACTIVE" | "";
+  roleCode?: string;
+}) {
+  const params = new URLSearchParams();
+  if (filters.search?.trim()) params.set("search", filters.search.trim());
+  if (filters.status) params.set("status", filters.status);
+  if (filters.roleCode?.trim()) params.set("roleCode", filters.roleCode.trim().toUpperCase());
+
+  const response = await apiClient.get<AdminUser[]>("/admin/users", { params });
+  return response.data;
+}
+
+export async function fetchAdminUserApi(userId: number) {
+  const response = await apiClient.get<AdminUser>(`/admin/users/${userId}`);
+  return response.data;
+}
+
+export async function createAdminUserApi(payload: {
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  roleCode: string;
+  active: boolean;
+}) {
+  const response = await apiClient.post<AdminUser>("/admin/users", payload);
+  return response.data;
+}
+
+export async function updateAdminUserApi(userId: number, payload: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  roleCode: string;
+  active: boolean;
+}) {
+  const response = await apiClient.put<AdminUser>(`/admin/users/${userId}`, payload);
+  return response.data;
+}
+
+export async function resetAdminUserPasswordApi(userId: number, payload: { newPassword: string }) {
+  const response = await apiClient.post<AdminUser>(`/admin/users/${userId}/reset-password`, payload);
+  return response.data;
+}
+
+export async function deleteAdminUserApi(userId: number) {
+  await apiClient.delete(`/admin/users/${userId}`);
+}
+
+export async function fetchCategoriesApi() {
+  const response = await apiClient.get<Category[]>("/categories");
+  return response.data;
+}
+
+export async function fetchAdminProductsApi() {
+  const response = await apiClient.get<AdminProduct[]>("/admin/products");
+  return response.data;
+}
+
+export async function fetchAdminProductsWithFiltersApi(filters: {
+  search?: string;
+  status?: "ACTIVE" | "INACTIVE" | "";
+  categoryId?: string;
+}) {
+  const params = new URLSearchParams();
+  if (filters.search?.trim()) params.set("search", filters.search.trim());
+  if (filters.status) params.set("status", filters.status);
+  if (filters.categoryId?.trim()) params.set("categoryId", filters.categoryId.trim());
+
+  const response = await apiClient.get<AdminProduct[]>("/admin/products", { params });
+  return response.data;
+}
+
+export async function fetchAdminProductApi(productId: number) {
+  const response = await apiClient.get<AdminProduct>(`/admin/products/${productId}`);
+  return response.data;
+}
+
+export async function createAdminProductApi(payload: {
+  name: string;
+  slug: string;
+  sku: string;
+  price: number;
+  priceUnit: string;
+  defaultTaxRate: number;
+  defaultDiscountRate: number;
+  status: "ACTIVE" | "INACTIVE";
+  imageUrl: string | null;
+  shortDescription: string;
+  longDescription: string;
+  moq: string;
+  featured: boolean;
+  categoryId: number;
+}) {
+  const response = await apiClient.post<AdminProduct>("/admin/products", payload);
+  return response.data;
+}
+
+export async function uploadProductImageApi(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await apiClient.post<{ imageUrl: string; fileName: string }>(
+    "/admin/products/upload-image",
+    formData
+  );
+  return response.data;
+}
+
+export async function updateAdminProductApi(productId: number, payload: {
+  name: string;
+  slug: string;
+  sku: string;
+  price: number;
+  priceUnit: string;
+  defaultTaxRate: number;
+  defaultDiscountRate: number;
+  status: "ACTIVE" | "INACTIVE";
+  imageUrl: string | null;
+  shortDescription: string;
+  longDescription: string;
+  moq: string;
+  featured: boolean;
+  categoryId: number;
+}) {
+  const response = await apiClient.put<AdminProduct>(`/admin/products/${productId}`, payload);
+  return response.data;
+}
+
+export async function deleteAdminProductApi(productId: number) {
+  await apiClient.delete(`/admin/products/${productId}`);
+}
+
+export async function fetchLeadsApi(filters: {
+  search?: string;
+  status?: LeadStatus | "";
+  source?: string;
+  assignedTo?: string;
+}) {
+  const params = new URLSearchParams();
+  if (filters.search?.trim()) params.set("search", filters.search.trim());
+  if (filters.status) params.set("status", filters.status);
+  if (filters.source?.trim()) params.set("source", filters.source.trim());
+  if (filters.assignedTo?.trim()) params.set("assignedTo", filters.assignedTo.trim());
+
+  const response = await apiClient.get<Lead[]>("/admin/leads", { params });
+  return response.data;
+}
+
+export async function fetchLeadApi(leadId: number) {
+  const response = await apiClient.get<Lead>(`/admin/leads/${leadId}`);
+  return response.data;
+}
+
+export async function createLeadApi(payload: {
+  fullName: string;
+  email: string;
+  phone: string;
+  companyName: string | null;
+  source: string | null;
+  notes: string | null;
+  assignedTo: string | null;
+  inquiryId: number | null;
+}) {
+  const response = await apiClient.post<Lead>("/admin/leads", payload);
+  return response.data;
+}
+
+export async function updateLeadApi(leadId: number, payload: {
+  fullName: string;
+  email: string;
+  phone: string;
+  companyName: string | null;
+  status: LeadStatus;
+  source: string | null;
+  notes: string | null;
+  assignedTo: string | null;
+  inquiryId: number | null;
+}) {
+  const response = await apiClient.put<Lead>(`/admin/leads/${leadId}`, payload);
+  return response.data;
+}
+
+export async function deleteLeadApi(leadId: number) {
+  await apiClient.delete(`/admin/leads/${leadId}`);
+}
+
+export async function fetchInquiriesApi(filters: {
+  search?: string;
+  status?: InquiryStatus | "";
+  source?: string;
+  assignedTo?: string;
+  inquiryType?: InquiryType | "";
+}) {
+  const params = new URLSearchParams();
+  if (filters.search?.trim()) params.set("search", filters.search.trim());
+  if (filters.status) params.set("status", filters.status);
+  if (filters.source?.trim()) params.set("source", filters.source.trim());
+  if (filters.assignedTo?.trim()) params.set("assignedTo", filters.assignedTo.trim());
+  if (filters.inquiryType) params.set("inquiryType", filters.inquiryType);
+
+  const response = await apiClient.get<Inquiry[]>("/admin/inquiries", { params });
+  return response.data;
+}
+
+export async function fetchInquiryApi(inquiryId: number) {
+  const response = await apiClient.get<Inquiry>(`/admin/inquiries/${inquiryId}`);
+  return response.data;
+}
+
+export async function updateInquiryApi(inquiryId: number, payload: {
+  status: InquiryStatus;
+  verificationStatus?: VerificationStatus | null;
+  paymentStatus?: PaymentStatus | null;
+  agreementId?: string | null;
+  committedReturnAmount?: number | null;
+  farmerActionNote?: string | null;
+  hubActionNote?: string | null;
+  adminNotes: string | null;
+  assignedTo: string | null;
+}) {
+  const response = await apiClient.put<Inquiry>(`/admin/inquiries/${inquiryId}`, payload);
+  return response.data;
+}
+
+export async function convertInquiryToLeadApi(inquiryId: number, payload: {
+  leadNotes: string | null;
+  assignedTo: string | null;
+}) {
+  const response = await apiClient.post<Inquiry>(`/admin/inquiries/${inquiryId}/convert-to-lead`, payload);
+  return response.data;
+}
+
+export function readErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError(error)) {
+    return (
+      (typeof error.response?.data?.message === "string" && error.response.data.message) ||
+      error.message ||
+      fallback
+    );
+  }
+
+  return fallback;
+}
