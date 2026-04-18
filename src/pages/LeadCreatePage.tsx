@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LeadForm, type LeadFormValues } from "../components/LeadForm";
 import { PageHeader } from "../components/PageHeader";
 import { createLeadApi, fetchAssignableOwnersApi, readErrorMessage } from "../lib/api";
@@ -58,7 +58,11 @@ export function LeadCreatePage() {
 
   return (
     <section className="admin-page">
-      <PageHeader title="Lead Create" subtitle="Capture lead details manually from calls, chats, and referrals." />
+      <PageHeader
+        title="Lead Create"
+        subtitle="Capture lead details manually from calls, chats, and referrals."
+        actions={<Link className="button-link button-small" to="/leads">Back To Search</Link>}
+      />
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
       <LeadForm
         title="Create Lead"
@@ -69,7 +73,6 @@ export function LeadCreatePage() {
         owners={owners}
         lockAssignedTo={isSales}
         onSubmit={handleSubmit}
-        onCancel={() => navigate("/leads")}
         submitLabel="Save Lead"
       />
     </section>

@@ -30,7 +30,6 @@ type LeadFormProps = {
   lockAssignedTo?: boolean;
   loading?: boolean;
   onSubmit: (values: LeadFormValues) => Promise<void> | void;
-  onCancel?: () => void;
   submitLabel: string;
   showDelete?: boolean;
   onDelete?: () => Promise<void> | void;
@@ -43,7 +42,6 @@ export function LeadForm({
   lockAssignedTo = false,
   loading = false,
   onSubmit,
-  onCancel,
   submitLabel,
   showDelete = false,
   onDelete
@@ -164,15 +162,10 @@ export function LeadForm({
 
         {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
-        <div className="row">
+        <div className="form-actions">
           <button type="submit" disabled={submitting || loading}>
             {submitting ? "Saving..." : submitLabel}
           </button>
-          {onCancel ? (
-            <button type="button" className="button-muted" onClick={onCancel}>
-              Cancel
-            </button>
-          ) : null}
           {showDelete && onDelete ? (
             <button type="button" className="button-danger button-muted" onClick={() => void onDelete()}>
               Delete

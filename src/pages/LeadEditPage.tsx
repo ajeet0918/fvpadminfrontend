@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { LeadForm, type LeadFormValues } from "../components/LeadForm";
 import { PageHeader } from "../components/PageHeader";
 import {
@@ -103,7 +103,11 @@ export function LeadEditPage() {
 
   return (
     <section className="admin-page">
-      <PageHeader title="Lead Edit" subtitle="Update ownership, stage, notes, and inquiry linkage." />
+      <PageHeader
+        title="Lead Edit"
+        subtitle="Update ownership, stage, notes, and inquiry linkage."
+        actions={<Link className="button-link button-small" to="/leads">Back To Search</Link>}
+      />
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
       {successMessage ? <p className="success-text">{successMessage}</p> : null}
       <LeadForm
@@ -113,7 +117,6 @@ export function LeadEditPage() {
         lockAssignedTo={isSales}
         loading={loading}
         onSubmit={handleSubmit}
-        onCancel={() => navigate("/leads")}
         submitLabel="Save Changes"
         showDelete
         onDelete={handleDelete}

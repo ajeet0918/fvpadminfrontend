@@ -44,7 +44,6 @@ type InquiryFormProps = {
   lockAssignedTo?: boolean;
   loading?: boolean;
   onSubmit: (values: InquiryFormValues) => Promise<void> | void;
-  onCancel?: () => void;
   submitLabel: string;
   onConvertToLead?: (values: InquiryFormValues) => Promise<void> | void;
   disableConvert?: boolean;
@@ -57,7 +56,6 @@ export function InquiryForm({
   lockAssignedTo = false,
   loading = false,
   onSubmit,
-  onCancel,
   submitLabel,
   onConvertToLead,
   disableConvert = false
@@ -199,15 +197,10 @@ export function InquiryForm({
 
         {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
-        <div className="row">
+        <div className="form-actions">
           <button type="submit" disabled={submitting || loading}>
             {submitting ? "Saving..." : submitLabel}
           </button>
-          {onCancel ? (
-            <button type="button" className="button-muted" onClick={onCancel}>
-              Cancel
-            </button>
-          ) : null}
           {onConvertToLead ? (
             <button
               type="button"

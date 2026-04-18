@@ -66,6 +66,7 @@ export function InquiryListPage() {
       <PageHeader
         title="Inquiry List"
         subtitle="Review website inquiries, assign owners, and convert qualified records to leads."
+        actions={<Link className="button-link" to="/inquiries/new">Create Inquiry</Link>}
       />
 
       <div className="filter-grid filter-grid-5">

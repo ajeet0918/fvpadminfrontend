@@ -114,7 +114,9 @@ export function OrdersPage() {
                   <td>{order.totalAmount === null ? "Pending Pricing" : order.totalAmount.toFixed(2)}</td>
                   <td>{formatDate(order.createdAt)}</td>
                   <td>
-                    <Link to={`/orders/${order.id}`}>Manage</Link>
+                    <Link className="button-link button-small" to={`/orders/${order.id}`}>
+                      Manage
+                    </Link>
                   </td>
                 </tr>
               ))}
