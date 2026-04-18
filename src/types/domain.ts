@@ -96,6 +96,25 @@ export type AdminUser = {
   roleName: string;
 };
 
+export type AdminCustomer = {
+  id: number;
+  fullName: string;
+  companyName: string;
+  email: string;
+  phone: string;
+  deliveryAddress: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  active: boolean;
+  status: "ACTIVE" | "INACTIVE";
+  createdAt: string;
+  updatedAt: string;
+  totalOrders: number;
+  lastOrderNumber: string | null;
+  lastOrderAt: string | null;
+};
+
 export type Category = {
   id: number;
   name: string;
@@ -169,6 +188,156 @@ export type PaymentStatus =
   | "RECEIVED"
   | "VERIFIED"
   | "FAILED";
+
+export type InvestorAccountStatus =
+  | "PENDING_VERIFICATION"
+  | "ACTIVE"
+  | "SUSPENDED"
+  | "CLOSED";
+
+export type InvestmentStatus = "ACTIVE" | "PAUSED" | "CLOSED";
+
+export type InvestorMonthlyReturnStatus =
+  | "DRAFT"
+  | "SUBMITTED"
+  | "APPROVED"
+  | "REJECTED"
+  | "HOLD"
+  | "PAID";
+
+export type MonthlyReturnDistributionMode = "COMPANY_PROFIT" | "RATE_BASED" | "PROFIT_POOL";
+
+export type InvestorPayoutStatus =
+  | "PENDING_APPROVAL"
+  | "APPROVED"
+  | "PAID"
+  | "REJECTED"
+  | "FAILED";
+
+export type InvestorAccount = {
+  id: number;
+  investorCode: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  sourceInquiryId: number | null;
+  status: InvestorAccountStatus;
+  verificationStatus: VerificationStatus;
+  notes: string | null;
+  totalInvested: number;
+  totalReturnsReceived: number;
+  pendingPayout: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Investment = {
+  id: number;
+  investorId: number;
+  investorCode: string;
+  investorName: string;
+  investmentReference: string;
+  principalAmount: number;
+  monthlyReturnRate: number;
+  startDate: string;
+  endDate: string | null;
+  status: InvestmentStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type InvestorMonthlyReturn = {
+  id: number;
+  investorId: number;
+  investorCode: string;
+  investorName: string;
+  investmentId: number;
+  investmentReference: string;
+  periodYear: number;
+  periodMonth: number;
+  basePrincipal: number;
+  returnRate: number;
+  calculatedAmount: number;
+  overrideAmount: number | null;
+  finalAmount: number;
+  overrideReason: string | null;
+  status: InvestorMonthlyReturnStatus;
+  payoutId: number | null;
+  payoutReference: string | null;
+  submittedBy: string | null;
+  submittedAt: string | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type InvestorPayout = {
+  id: number;
+  investorId: number;
+  investorCode: string;
+  investorName: string;
+  payoutReference: string;
+  totalAmount: number;
+  status: InvestorPayoutStatus;
+  paymentChannel: string | null;
+  transactionReference: string | null;
+  notes: string | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  paidAt: string | null;
+  receiptId: number | null;
+  receiptNumber: string | null;
+  createdAt: string;
+  updatedAt: string;
+  monthlyReturnIds: number[];
+};
+
+export type InvestorReceipt = {
+  id: number;
+  payoutId: number;
+  payoutReference: string;
+  investorId: number;
+  investorCode: string;
+  investorName: string;
+  payoutAmount: number;
+  receiptNumber: string;
+  documentUrl: string | null;
+  version: number;
+  generatedBy: string | null;
+  generatedAt: string;
+};
+
+export type InvestorOverview = {
+  investors: InvestorAccount[];
+  activeInvestors: InvestorAccount[];
+  investments: Investment[];
+};
+
+export type InvestorProfileUpsertPayload = {
+  investorCode?: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  sourceInquiryId?: number | null;
+  status: InvestorAccountStatus;
+  verificationStatus: VerificationStatus;
+  notes?: string | null;
+  investmentId?: number | null;
+  principalAmount?: number | null;
+  monthlyReturnRate?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  investmentStatus?: InvestmentStatus | null;
+  investmentNotes?: string | null;
+};
+
+export type InvestorProfileResponse = {
+  investor: InvestorAccount;
+  investment: Investment | null;
+};
 
 export type Inquiry = {
   id: number;

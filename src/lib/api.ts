@@ -2,6 +2,7 @@
 import axios from "axios";
 import { clearAccessToken, getAccessToken } from "./auth";
 import type {
+  AdminCustomer,
   AdminProduct,
   AdminRole,
   AdminUser,
@@ -12,6 +13,19 @@ import type {
   Lead,
   LeadStatus,
   LoginResponse,
+  Investment,
+  InvestorAccount,
+  InvestorOverview,
+  InvestorProfileResponse,
+  InvestorProfileUpsertPayload,
+  InvestorMonthlyReturn,
+  InvestorPayout,
+  InvestorReceipt,
+  InvestorMonthlyReturnStatus,
+  InvestorPayoutStatus,
+  InvestorAccountStatus,
+  InvestmentStatus,
+  MonthlyReturnDistributionMode,
   OwnerOption,
   Order,
   OrderStatus,
@@ -148,6 +162,38 @@ export async function resetAdminUserPasswordApi(userId: number, payload: { newPa
 
 export async function deleteAdminUserApi(userId: number) {
   await apiClient.delete(`/admin/users/${userId}`);
+}
+
+export async function fetchAdminCustomersWithFiltersApi(filters: {
+  search?: string;
+  status?: "ACTIVE" | "INACTIVE" | "";
+}) {
+  const params = new URLSearchParams();
+  if (filters.search?.trim()) params.set("search", filters.search.trim());
+  if (filters.status) params.set("status", filters.status);
+
+  const response = await apiClient.get<AdminCustomer[]>("/admin/customers", { params });
+  return response.data;
+}
+
+export async function fetchAdminCustomerApi(customerId: number) {
+  const response = await apiClient.get<AdminCustomer>(`/admin/customers/${customerId}`);
+  return response.data;
+}
+
+export async function updateAdminCustomerApi(customerId: number, payload: {
+  fullName: string;
+  companyName: string;
+  email: string;
+  phone: string;
+  deliveryAddress: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  active: boolean;
+}) {
+  const response = await apiClient.put<AdminCustomer>(`/admin/customers/${customerId}`, payload);
+  return response.data;
 }
 
 export async function fetchCategoriesApi() {
@@ -310,6 +356,18 @@ export async function fetchInquiryApi(inquiryId: number) {
   return response.data;
 }
 
+export async function createInquiryApi(payload: {
+  fullName: string;
+  companyName: string;
+  email: string;
+  phone: string;
+  productName: string;
+  message: string;
+}) {
+  const response = await apiClient.post<Inquiry>("/inquiries", payload);
+  return response.data;
+}
+
 export async function updateInquiryApi(inquiryId: number, payload: {
   status: InquiryStatus;
   verificationStatus?: VerificationStatus | null;
@@ -330,6 +388,259 @@ export async function convertInquiryToLeadApi(inquiryId: number, payload: {
   assignedTo: string | null;
 }) {
   const response = await apiClient.post<Inquiry>(`/admin/inquiries/${inquiryId}/convert-to-lead`, payload);
+  return response.data;
+}
+
+export async function fetchInvestorsApi(filters: {
+  search?: string;
+  status?: InvestorAccountStatus | "";
+  verificationStatus?: VerificationStatus | "";
+}) {
+  const params = new URLSearchParams();
+  if (filters.search?.trim()) params.set("search", filters.search.trim());
+  if (filters.status) params.set("status", filters.status);
+  if (filters.verificationStatus) params.set("verificationStatus", filters.verificationStatus);
+  const response = await apiClient.get<InvestorAccount[]>("/admin/investor-platform/investors", { params });
+  return response.data;
+}
+
+export async function fetchInvestorOverviewApi(filters: {
+  investorSearch?: string;
+  investorStatus?: InvestorAccountStatus | "";
+  verificationStatus?: VerificationStatus | "";
+  investmentSearch?: string;
+  investmentStatus?: InvestmentStatus | "";
+}) {
+  const params = new URLSearchParams();
+  if (filters.investorSearch?.trim()) params.set("investorSearch", filters.investorSearch.trim());
+  if (filters.investorStatus) params.set("investorStatus", filters.investorStatus);
+  if (filters.verificationStatus) params.set("verificationStatus", filters.verificationStatus);
+  if (filters.investmentSearch?.trim()) params.set("investmentSearch", filters.investmentSearch.trim());
+  if (filters.investmentStatus) params.set("investmentStatus", filters.investmentStatus);
+  const response = await apiClient.get<InvestorOverview>("/admin/investor-platform/overview", { params });
+  return response.data;
+}
+
+export async function fetchInvestorApi(investorId: number) {
+  const response = await apiClient.get<InvestorAccount>(`/admin/investor-platform/investors/${investorId}`);
+  return response.data;
+}
+
+export async function createInvestorApi(payload: {
+  investorCode?: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  sourceInquiryId?: number | null;
+  status: InvestorAccountStatus;
+  verificationStatus: VerificationStatus;
+  notes?: string | null;
+}) {
+  const response = await apiClient.post<InvestorAccount>("/admin/investor-platform/investors", payload);
+  return response.data;
+}
+
+export async function createInvestorProfileApi(payload: InvestorProfileUpsertPayload) {
+  const response = await apiClient.post<InvestorProfileResponse>("/admin/investor-platform/profiles", payload);
+  return response.data;
+}
+
+export async function updateInvestorProfileApi(investorId: number, payload: InvestorProfileUpsertPayload) {
+  const response = await apiClient.put<InvestorProfileResponse>(`/admin/investor-platform/profiles/${investorId}`, payload);
+  return response.data;
+}
+
+export async function updateInvestorApi(investorId: number, payload: {
+  fullName: string;
+  email: string;
+  phone: string;
+  status: InvestorAccountStatus;
+  verificationStatus: VerificationStatus;
+  notes?: string | null;
+}) {
+  const response = await apiClient.put<InvestorAccount>(`/admin/investor-platform/investors/${investorId}`, payload);
+  return response.data;
+}
+
+export async function fetchInvestmentsApi(filters: {
+  investorId?: number | null;
+  status?: InvestmentStatus | "";
+  search?: string;
+}) {
+  const params = new URLSearchParams();
+  if (filters.investorId) params.set("investorId", String(filters.investorId));
+  if (filters.status) params.set("status", filters.status);
+  if (filters.search?.trim()) params.set("search", filters.search.trim());
+  const response = await apiClient.get<Investment[]>("/admin/investor-platform/investments", { params });
+  return response.data;
+}
+
+export async function createInvestmentApi(payload: {
+  investorId: number;
+  investmentReference?: string;
+  principalAmount: number;
+  monthlyReturnRate: number;
+  startDate: string;
+  endDate?: string | null;
+  status: InvestmentStatus;
+  notes?: string | null;
+}) {
+  const response = await apiClient.post<Investment>("/admin/investor-platform/investments", payload);
+  return response.data;
+}
+
+export async function updateInvestmentApi(investmentId: number, payload: {
+  principalAmount: number;
+  monthlyReturnRate: number;
+  startDate: string;
+  endDate?: string | null;
+  status: InvestmentStatus;
+  notes?: string | null;
+}) {
+  const response = await apiClient.put<Investment>(`/admin/investor-platform/investments/${investmentId}`, payload);
+  return response.data;
+}
+
+export async function generateMonthlyReturnsApi(payload: {
+  investorId?: number | null;
+  year: number;
+  month: number;
+  distributionMode?: MonthlyReturnDistributionMode;
+  monthlyRate?: number | null;
+  distributableProfit?: number | null;
+  companyFund?: number | null;
+  companyProfit?: number | null;
+  returnPercentage?: number | null;
+}) {
+  const response = await apiClient.post<InvestorMonthlyReturn[]>("/admin/investor-platform/returns/generate", payload);
+  return response.data;
+}
+
+export async function fetchMonthlyReturnsApi(filters: {
+  investorId?: number | null;
+  year?: number | null;
+  month?: number | null;
+  status?: InvestorMonthlyReturnStatus | "";
+}) {
+  const params = new URLSearchParams();
+  if (filters.investorId) params.set("investorId", String(filters.investorId));
+  if (filters.year) params.set("year", String(filters.year));
+  if (filters.month) params.set("month", String(filters.month));
+  if (filters.status) params.set("status", filters.status);
+  const response = await apiClient.get<InvestorMonthlyReturn[]>("/admin/investor-platform/returns", { params });
+  return response.data;
+}
+
+export async function updateMonthlyReturnApi(monthlyReturnId: number, payload: {
+  overrideAmount?: number | null;
+  overrideReason?: string | null;
+  notes?: string | null;
+}) {
+  const response = await apiClient.put<InvestorMonthlyReturn>(
+    `/admin/investor-platform/returns/${monthlyReturnId}`,
+    payload
+  );
+  return response.data;
+}
+
+export async function submitMonthlyReturnApi(monthlyReturnId: number, payload: { notes?: string | null }) {
+  const response = await apiClient.post<InvestorMonthlyReturn>(
+    `/admin/investor-platform/returns/${monthlyReturnId}/submit`,
+    payload
+  );
+  return response.data;
+}
+
+export async function approveMonthlyReturnApi(monthlyReturnId: number, payload: { notes?: string | null }) {
+  const response = await apiClient.post<InvestorMonthlyReturn>(
+    `/admin/investor-platform/returns/${monthlyReturnId}/approve`,
+    payload
+  );
+  return response.data;
+}
+
+export async function rejectMonthlyReturnApi(monthlyReturnId: number, payload: { notes?: string | null }) {
+  const response = await apiClient.post<InvestorMonthlyReturn>(
+    `/admin/investor-platform/returns/${monthlyReturnId}/reject`,
+    payload
+  );
+  return response.data;
+}
+
+export async function holdMonthlyReturnApi(monthlyReturnId: number, payload: { notes?: string | null }) {
+  const response = await apiClient.post<InvestorMonthlyReturn>(
+    `/admin/investor-platform/returns/${monthlyReturnId}/hold`,
+    payload
+  );
+  return response.data;
+}
+
+export async function fetchInvestorPayoutsApi(filters: {
+  investorId?: number | null;
+  status?: InvestorPayoutStatus | "";
+}) {
+  const params = new URLSearchParams();
+  if (filters.investorId) params.set("investorId", String(filters.investorId));
+  if (filters.status) params.set("status", filters.status);
+  const response = await apiClient.get<InvestorPayout[]>("/admin/investor-platform/payouts", { params });
+  return response.data;
+}
+
+export async function createInvestorPayoutRequestApi(payload: {
+  investorId: number;
+  monthlyReturnIds: number[];
+  notes?: string | null;
+}) {
+  const response = await apiClient.post<InvestorPayout>("/admin/investor-platform/payouts/request", payload);
+  return response.data;
+}
+
+export async function approveInvestorPayoutApi(payoutId: number, payload: { notes?: string | null }) {
+  const response = await apiClient.post<InvestorPayout>(
+    `/admin/investor-platform/payouts/${payoutId}/approve`,
+    payload
+  );
+  return response.data;
+}
+
+export async function rejectInvestorPayoutApi(payoutId: number, payload: { notes?: string | null }) {
+  const response = await apiClient.post<InvestorPayout>(
+    `/admin/investor-platform/payouts/${payoutId}/reject`,
+    payload
+  );
+  return response.data;
+}
+
+export async function markInvestorPayoutPaidApi(payoutId: number, payload: {
+  paymentChannel: string;
+  transactionReference: string;
+  paidAt?: string | null;
+  notes?: string | null;
+}) {
+  const response = await apiClient.post<InvestorPayout>(
+    `/admin/investor-platform/payouts/${payoutId}/mark-paid`,
+    payload
+  );
+  return response.data;
+}
+
+export async function generateInvestorReceiptApi(payoutId: number) {
+  const response = await apiClient.post<InvestorReceipt>(`/admin/investor-platform/payouts/${payoutId}/generate-receipt`);
+  return response.data;
+}
+
+export async function fetchInvestorReceiptsApi(filters: { investorId?: number | null }) {
+  const params = new URLSearchParams();
+  if (filters.investorId) params.set("investorId", String(filters.investorId));
+  const response = await apiClient.get<InvestorReceipt[]>("/admin/investor-platform/receipts", { params });
+  return response.data;
+}
+
+export async function downloadInvestorReceiptFileApi(receiptNumber: string) {
+  const response = await apiClient.get<Blob>(
+    `/admin/investor-platform/receipts/number/${encodeURIComponent(receiptNumber)}/download`,
+    { responseType: "blob" }
+  );
   return response.data;
 }
 

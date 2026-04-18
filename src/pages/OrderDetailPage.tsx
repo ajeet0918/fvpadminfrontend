@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
 import {
   fetchOrderApi,
@@ -121,6 +121,7 @@ export function OrderDetailPage() {
       <PageHeader
         title={`Order ${order.orderNumber}`}
         subtitle="Review product-based pricing and update fulfillment status without layout shifts."
+        actions={<Link className="button-link button-small" to="/orders">Back To Orders</Link>}
       />
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 

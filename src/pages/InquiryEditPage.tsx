@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { InquiryForm, type InquiryFormValues } from "../components/InquiryForm";
 import { PageHeader } from "../components/PageHeader";
 import {
@@ -30,7 +30,6 @@ function formatDate(value: string) {
 }
 
 export function InquiryEditPage() {
-  const navigate = useNavigate();
   const params = useParams<{ id: string }>();
   const inquiryId = Number(params.id);
   const currentRole = getCurrentRole();
@@ -141,7 +140,11 @@ export function InquiryEditPage() {
 
   return (
     <section className="admin-page">
-      <PageHeader title="Inquiry Detail" subtitle="Review inquiry context and progress it through pipeline states." />
+      <PageHeader
+        title="Inquiry Detail"
+        subtitle="Review inquiry context and progress it through pipeline states."
+        actions={<Link className="button-link button-small" to="/inquiries">Back To Search</Link>}
+      />
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
       {successMessage ? <p className="success-text">{successMessage}</p> : null}
 
@@ -281,7 +284,6 @@ export function InquiryEditPage() {
         lockAssignedTo={isSales}
         loading={loading}
         onSubmit={handleSubmit}
-        onCancel={() => navigate("/inquiries")}
         submitLabel="Save Changes"
         onConvertToLead={handleConvertToLead}
         disableConvert={inquiry?.status === "CONVERTED"}

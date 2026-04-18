@@ -64,7 +64,7 @@ export function DashboardPage() {
           <>
             <Link className="button-link" to="/products/new">Create Product</Link>
             <Link className="button-link" to="/leads/new">Add Lead</Link>
-            <Link className="button-link button-link-secondary" to="/orders">Open Orders</Link>
+            <Link className="button-link" to="/orders">Open Orders</Link>
           </>
         )}
       />
@@ -111,7 +111,7 @@ export function DashboardPage() {
                     <div className="order-meta">
                       <span className="status-pill">{formatStatusLabel(order.status)}</span>
                       <small>{formatDate(order.createdAt)}</small>
-                      <Link to={`/orders/${order.id}`}>Open</Link>
+                      <Link className="button-link button-small" to={`/orders/${order.id}`}>Open</Link>
                     </div>
                   </article>
                 ))}
