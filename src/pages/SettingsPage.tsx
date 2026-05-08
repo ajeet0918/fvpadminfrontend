@@ -37,7 +37,7 @@ export function SettingsPage() {
           Show page hints
         </label>
         <div className="row">
-          <button type="button" onClick={handleSave}>Save Settings</button>
+          <button type="button" className="button-link" onClick={handleSave}>Save Settings</button>
         </div>
         {saved ? <p className="success-text">Settings saved.</p> : null}
       </article>

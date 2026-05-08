@@ -19,6 +19,9 @@ const initialValues: ProductFormValues = {
   longDescription: "",
   moq: "",
   imageUrl: "",
+  imageOriginalFileName: "",
+  imageContentType: "",
+  imageSizeBytes: "",
   featured: false
 };
 
@@ -55,6 +58,9 @@ export function ProductCreatePage() {
       defaultDiscountRate: Number(values.defaultDiscountRate),
       status: values.status,
       imageUrl: values.imageUrl.trim() || null,
+      imageOriginalFileName: values.imageOriginalFileName.trim() || null,
+      imageContentType: values.imageContentType.trim() || null,
+      imageSizeBytes: values.imageSizeBytes.trim() ? Number(values.imageSizeBytes) : null,
       shortDescription: values.shortDescription.trim(),
       longDescription: values.longDescription.trim(),
       moq: values.moq.trim(),

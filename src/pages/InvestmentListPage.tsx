@@ -173,8 +173,8 @@ export function InvestmentListPage() {
           </label>
           <label>Notes<input value={form.notes} onChange={(event) => setForm((p) => ({ ...p, notes: event.target.value }))} /></label>
           <div className="row">
-            <button type="submit" disabled={saving}>{saving ? "Saving..." : editingId ? "Save Changes" : "Create Investment"}</button>
-            {editingId ? <button type="button" className="button-muted" onClick={() => setEditingId(null)}>Cancel Edit</button> : null}
+            <button type="submit" className="button-link" disabled={saving}>{saving ? "Saving..." : editingId ? "Save Changes" : "Create Investment"}</button>
+            {editingId ? <button type="button" className="button-link button-link-secondary" onClick={() => setEditingId(null)}>Cancel Edit</button> : null}
           </div>
         </form>
       </article>

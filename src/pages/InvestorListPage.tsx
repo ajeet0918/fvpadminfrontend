@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { StatusBadge } from "../components/StatusBadge";
 import {
@@ -239,7 +240,7 @@ export function InvestorListPage() {
         <PageHeader
           title={mode === "CREATE" ? "Create Investor Profile" : "Edit Investor Profile"}
           subtitle="Use one form for investor details and optional investment details."
-          actions={<button type="button" className="button-muted" onClick={closeEditor}>Back To Search</button>}
+          actions={<button type="button" className="button-link button-link-secondary" onClick={closeEditor}>Back To Search</button>}
         />
 
         <article className="admin-form-card module-form-scroll">
@@ -385,10 +386,10 @@ export function InvestorListPage() {
             {successMessage ? <p className="success-text">{successMessage}</p> : null}
 
             <div className="row">
-              <button type="submit" disabled={saving}>
+              <button type="submit" className="button-link" disabled={saving}>
                 {saving ? "Saving..." : mode === "CREATE" ? "Create Profile" : "Save Profile"}
               </button>
-              <button type="button" className="button-muted" onClick={closeEditor}>Cancel</button>
+              <button type="button" className="button-link button-link-secondary" onClick={closeEditor}>Cancel</button>
             </div>
           </form>
         </article>
@@ -401,7 +402,7 @@ export function InvestorListPage() {
       <PageHeader
         title="Investor Search"
         subtitle="Search investors and investments. Open create or edit as needed."
-        actions={<button type="button" onClick={openCreatePage}>Create Investor Profile</button>}
+        actions={<button type="button" className="button-link" onClick={openCreatePage}>Create Investor Profile</button>}
       />
 
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
@@ -446,7 +447,7 @@ export function InvestorListPage() {
             <h3>Investor List</h3>
             <span className="table-muted">Search and manage investor account profiles</span>
           </div>
-          <div className="filter-grid filter-grid-4">
+          <div className="filter-grid filter-grid-4 financial-filter-row">
             <label>
               Search
               <input
@@ -477,40 +478,39 @@ export function InvestorListPage() {
             </label>
           </div>
 
-          <div className="data-table-wrap section-table-scroll">
-            <table className="data-table">
+          <DataTable className="section-table-scroll" isEmpty={investors.length === 0} emptyText="No investors found.">
               <thead>
                 <tr>
                   <th>Code</th>
                   <th>Investor</th>
-                  <th>Total Invested</th>
-                  <th>Returns Received</th>
-                  <th>Pending Payout</th>
+                  <th className="text-right">Total Invested</th>
+                  <th className="text-right">Returns Received</th>
+                  <th className="text-right">Pending Payout</th>
                   <th>Status</th>
                   <th>Verification</th>
-                  <th />
                 </tr>
               </thead>
               <tbody>
                 {investors.map((item) => (
                   <tr key={item.id}>
-                    <td>{item.investorCode}</td>
                     <td>
-                      <div>{item.fullName}</div>
-                      <div className="table-muted">{item.email} | {item.phone}</div>
+                      <button type="button" className="record-id-link record-id-button" onClick={() => openEditInvestorPage(item)}>
+                        {item.investorCode}
+                      </button>
                     </td>
-                    <td>{item.totalInvested.toFixed(2)}</td>
-                    <td>{item.totalReturnsReceived.toFixed(2)}</td>
-                    <td>{item.pendingPayout.toFixed(2)}</td>
+                    <td>
+                      <div className="font-medium">{item.fullName}</div>
+                      <div className="table-muted">{item.email} • {item.phone}</div>
+                    </td>
+                    <td className="text-right tabular-nums">{item.totalInvested.toFixed(2)}</td>
+                    <td className="text-right tabular-nums">{item.totalReturnsReceived.toFixed(2)}</td>
+                    <td className="text-right tabular-nums">{item.pendingPayout.toFixed(2)}</td>
                     <td><StatusBadge label={item.status} tone={item.status === "ACTIVE" ? "success" : "warning"} /></td>
                     <td><StatusBadge label={item.verificationStatus} tone={item.verificationStatus === "VERIFIED" ? "success" : "neutral"} /></td>
-                    <td><button type="button" className="button-link button-small" onClick={() => openEditInvestorPage(item)}>Edit</button></td>
                   </tr>
                 ))}
               </tbody>
-            </table>
-            {investors.length === 0 ? <p className="empty-state">No investors found.</p> : null}
-          </div>
+          </DataTable>
         </article>
       ) : (
         <article className="admin-form-card">
@@ -518,7 +518,7 @@ export function InvestorListPage() {
             <h3>Investment List</h3>
             <span className="table-muted">Search and manage investment records linked to investors</span>
           </div>
-          <div className="filter-grid filter-grid-4">
+          <div className="filter-grid filter-grid-4 financial-filter-row">
             <label>
               Search
               <input
@@ -539,43 +539,39 @@ export function InvestorListPage() {
             </label>
           </div>
 
-          <div className="data-table-wrap section-table-scroll">
-            <table className="data-table">
+          <DataTable className="section-table-scroll" isEmpty={investments.length === 0} emptyText="No investments found.">
               <thead>
                 <tr>
                   <th>Reference</th>
                   <th>Investor</th>
-                  <th>Principal</th>
-                  <th>Monthly Rate</th>
+                  <th className="text-right">Principal</th>
+                  <th className="text-right">Monthly Rate</th>
                   <th>Status</th>
                   <th>Dates</th>
-                  <th />
                 </tr>
               </thead>
               <tbody>
                 {investments.map((item) => (
                   <tr key={item.id}>
-                    <td>{item.investmentReference}</td>
-                    <td>{item.investorCode} - {item.investorName}</td>
-                    <td>{item.principalAmount.toFixed(2)}</td>
-                    <td>{item.monthlyReturnRate.toFixed(2)}%</td>
-                    <td>{item.status}</td>
-                    <td>{item.startDate} {item.endDate ? `to ${item.endDate}` : ""}</td>
                     <td>
-                      <button
-                        type="button"
-                        className="button-link button-small"
-                        onClick={() => openEditFromInvestment(item)}
-                      >
-                        Edit
+                      <button type="button" className="record-id-link record-id-button font-medium" onClick={() => openEditFromInvestment(item)}>
+                        {item.investmentReference}
                       </button>
                     </td>
+                    <td>{item.investorCode} - {item.investorName}</td>
+                    <td className="text-right tabular-nums">{item.principalAmount.toFixed(2)}</td>
+                    <td className="text-right tabular-nums">{item.monthlyReturnRate.toFixed(2)}%</td>
+                    <td>
+                      <StatusBadge
+                        label={item.status}
+                        tone={item.status === "ACTIVE" ? "success" : item.status === "PAUSED" ? "warning" : "neutral"}
+                      />
+                    </td>
+                    <td>{item.startDate} {item.endDate ? `to ${item.endDate}` : ""}</td>
                   </tr>
                 ))}
               </tbody>
-            </table>
-            {investments.length === 0 ? <p className="empty-state">No investments found.</p> : null}
-          </div>
+          </DataTable>
         </article>
       )}
     </section>

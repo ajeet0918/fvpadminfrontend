@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { StatusBadge } from "../components/StatusBadge";
 import { fetchAdminRolesApi, fetchAdminUsersWithFiltersApi, readErrorMessage } from "../lib/api";
@@ -92,42 +93,41 @@ export function UserListPage() {
       {loading ? <p>Loading users...</p> : null}
 
       {!loading ? (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th />
+        <DataTable isEmpty={filteredUsers.length === 0} emptyText="No users found.">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.map((user) => (
+              <tr key={user.id}>
+                <td>
+                  <Link className="record-id-link" to={`/users/${user.id}/edit`}>
+                    {user.id}
+                  </Link>
+                </td>
+                <td>{user.username}</td>
+                <td>{`${user.firstName} ${user.lastName}`.trim() || "-"}</td>
+                <td>{user.email ?? "-"}</td>
+                <td>{user.roleCode}</td>
+                <td>
+                  <StatusBadge
+                    label={user.status}
+                    tone={user.active ? "success" : "warning"}
+                  />
+                </td>
+                <td>{formatDate(user.createdAt)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.username}</td>
-                  <td>{`${user.firstName} ${user.lastName}`.trim() || "-"}</td>
-                  <td>{user.email ?? "-"}</td>
-                  <td>{user.roleCode}</td>
-                  <td>
-                    <StatusBadge
-                      label={user.status}
-                      tone={user.active ? "success" : "warning"}
-                    />
-                  </td>
-                  <td>{formatDate(user.createdAt)}</td>
-                  <td>
-                    <Link className="button-link button-small" to={`/users/${user.id}/edit`}>Edit</Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filteredUsers.length === 0 ? <p className="empty-state">No users found.</p> : null}
-        </div>
+            ))}
+          </tbody>
+        </DataTable>
       ) : null}
     </section>
   );

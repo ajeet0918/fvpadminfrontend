@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { StatusBadge } from "../components/StatusBadge";
 import {
-  deleteAdminProductApi,
   fetchAdminProductsWithFiltersApi,
   fetchCategoriesApi,
   readErrorMessage
@@ -18,7 +18,6 @@ export function ProductListPage() {
   const [statusFilter, setStatusFilter] = useState<"" | "ACTIVE" | "INACTIVE">("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadCategories() {
@@ -53,18 +52,6 @@ export function ProductListPage() {
   }, [searchTerm, statusFilter, categoryFilter]);
 
   const filteredProducts = useMemo(() => products, [products]);
-
-  async function handleDelete(product: AdminProduct) {
-    const confirmed = window.confirm(`Delete product "${product.name}"?`);
-    if (!confirmed) return;
-    try {
-      await deleteAdminProductApi(product.id);
-      setProducts((current) => current.filter((item) => item.id !== product.id));
-      setSuccessMessage("Product deleted.");
-    } catch (error) {
-      setErrorMessage(readErrorMessage(error, "Unable to delete product."));
-    }
-  }
 
   return (
     <section className="admin-page">
@@ -102,59 +89,50 @@ export function ProductListPage() {
         </label>
       </div>
 
-      {successMessage ? <p className="success-text">{successMessage}</p> : null}
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
       {loading ? <p>Loading products...</p> : null}
 
       {!loading ? (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>SKU</th>
-                <th>Price</th>
-                <th>Tax %</th>
-                <th>Discount %</th>
-                <th>Status</th>
-                <th>Category</th>
-                <th />
+        <DataTable isEmpty={filteredProducts.length === 0} emptyText="No products found.">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>SKU</th>
+              <th>Price</th>
+              <th>Tax %</th>
+              <th>Discount %</th>
+              <th>Status</th>
+              <th>Category</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredProducts.map((product) => (
+              <tr key={product.id}>
+                <td>
+                  <Link className="record-id-link" to={`/products/${product.id}/edit`}>
+                    {product.id}
+                  </Link>
+                </td>
+                <td>{product.name}</td>
+                <td>{product.sku}</td>
+                <td>
+                  {product.price === null ? "0.00" : product.price.toFixed(2)}
+                  {` / ${product.priceUnit}`}
+                </td>
+                <td>{product.defaultTaxRate ?? 0}</td>
+                <td>{product.defaultDiscountRate ?? 0}</td>
+                <td>
+                  <StatusBadge
+                    label={product.status}
+                    tone={product.status === "ACTIVE" ? "success" : "warning"}
+                  />
+                </td>
+                <td>{product.categoryName}</td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredProducts.map((product) => (
-                <tr key={product.id}>
-                  <td>{product.name}</td>
-                  <td>{product.sku}</td>
-                  <td>
-                    {product.price === null ? "0.00" : product.price.toFixed(2)}
-                    {` / ${product.priceUnit}`}
-                  </td>
-                  <td>{product.defaultTaxRate ?? 0}</td>
-                  <td>{product.defaultDiscountRate ?? 0}</td>
-                  <td>
-                    <StatusBadge
-                      label={product.status}
-                      tone={product.status === "ACTIVE" ? "success" : "warning"}
-                    />
-                  </td>
-                  <td>{product.categoryName}</td>
-                  <td className="actions-cell">
-                    <Link className="button-link button-small" to={`/products/${product.id}/edit`}>Edit</Link>
-                    <button
-                      type="button"
-                      className="button-muted button-small"
-                      onClick={() => void handleDelete(product)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filteredProducts.length === 0 ? <p className="empty-state">No products found.</p> : null}
-        </div>
+            ))}
+          </tbody>
+        </DataTable>
       ) : null}
     </section>
   );

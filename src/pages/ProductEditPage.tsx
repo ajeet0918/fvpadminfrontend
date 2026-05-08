@@ -25,6 +25,9 @@ const emptyValues: ProductFormValues = {
   longDescription: "",
   moq: "",
   imageUrl: "",
+  imageOriginalFileName: "",
+  imageContentType: "",
+  imageSizeBytes: "",
   featured: false
 };
 
@@ -69,6 +72,9 @@ export function ProductEditPage() {
           longDescription: product.longDescription,
           moq: product.moq,
           imageUrl: product.imageUrl ?? "",
+          imageOriginalFileName: product.imageOriginalFileName ?? "",
+          imageContentType: product.imageContentType ?? "",
+          imageSizeBytes: product.imageSizeBytes != null ? String(product.imageSizeBytes) : "",
           featured: product.featured
         });
       } catch (error) {
@@ -92,6 +98,9 @@ export function ProductEditPage() {
       defaultDiscountRate: Number(nextValues.defaultDiscountRate),
       status: nextValues.status,
       imageUrl: nextValues.imageUrl.trim() || null,
+      imageOriginalFileName: nextValues.imageOriginalFileName.trim() || null,
+      imageContentType: nextValues.imageContentType.trim() || null,
+      imageSizeBytes: nextValues.imageSizeBytes.trim() ? Number(nextValues.imageSizeBytes) : null,
       shortDescription: nextValues.shortDescription.trim(),
       longDescription: nextValues.longDescription.trim(),
       moq: nextValues.moq.trim(),

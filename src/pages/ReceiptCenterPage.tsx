@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { downloadInvestorReceiptFileApi, fetchInvestorReceiptsApi, fetchInvestorsApi, readErrorMessage } from "../lib/api";
 import type { InvestorAccount, InvestorReceipt } from "../types/domain";
@@ -63,41 +64,38 @@ export function ReceiptCenterPage() {
       {loading ? <p>Loading receipts...</p> : null}
 
       {!loading ? (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Receipt Number</th>
-                <th>Payout Ref</th>
-                <th>Investor</th>
-                <th>Amount</th>
-                <th>Generated</th>
-                <th />
+        <DataTable isEmpty={items.length === 0} emptyText="No receipts available.">
+          <thead>
+            <tr>
+              <th>Receipt Number</th>
+              <th>Payout Ref</th>
+              <th>Investor</th>
+              <th>Amount</th>
+              <th>Generated</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.id}>
+                <td>{item.receiptNumber}</td>
+                <td>{item.payoutReference}</td>
+                <td>{item.investorCode} - {item.investorName}</td>
+                <td>{item.payoutAmount.toFixed(2)}</td>
+                <td>{new Date(item.generatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</td>
+                <td>
+                  <button
+                    type="button"
+                    className="button-link button-small"
+                    onClick={() => void handleDownload(item.receiptNumber)}
+                  >
+                    Download
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.receiptNumber}</td>
-                  <td>{item.payoutReference}</td>
-                  <td>{item.investorCode} - {item.investorName}</td>
-                  <td>{item.payoutAmount.toFixed(2)}</td>
-                  <td>{new Date(item.generatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className="button-link button-small"
-                      onClick={() => void handleDownload(item.receiptNumber)}
-                    >
-                      Download
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {items.length === 0 ? <p className="empty-state">No receipts available.</p> : null}
-        </div>
+            ))}
+          </tbody>
+        </DataTable>
       ) : null}
     </section>
   );

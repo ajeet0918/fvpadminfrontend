@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { StatusBadge } from "../components/StatusBadge";
 import { fetchAdminCustomersWithFiltersApi, readErrorMessage } from "../lib/api";
@@ -70,52 +71,51 @@ export function CustomerListPage() {
       {loading ? <p>Loading customers...</p> : null}
 
       {!loading ? (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Company</th>
-                <th>Contact</th>
-                <th>Location</th>
-                <th>Orders</th>
-                <th>Last Order</th>
-                <th>Status</th>
-                <th>Updated</th>
-                <th />
+        <DataTable isEmpty={visibleCustomers.length === 0} emptyText="No customers found.">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Company</th>
+              <th>Contact</th>
+              <th>Location</th>
+              <th>Orders</th>
+              <th>Last Order</th>
+              <th>Status</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleCustomers.map((customer) => (
+              <tr key={customer.id}>
+                <td>
+                  <Link className="record-id-link" to={`/customers/${customer.id}/edit`}>
+                    {customer.id}
+                  </Link>
+                </td>
+                <td>{customer.fullName}</td>
+                <td>{customer.companyName}</td>
+                <td>
+                  <div>{customer.phone}</div>
+                  <div className="table-muted">{customer.email}</div>
+                </td>
+                <td>{`${customer.city}, ${customer.state}`}</td>
+                <td>{customer.totalOrders}</td>
+                <td>
+                  <div>{customer.lastOrderNumber ?? "-"}</div>
+                  <div className="table-muted">{formatDate(customer.lastOrderAt)}</div>
+                </td>
+                <td>
+                  <StatusBadge
+                    label={customer.status}
+                    tone={customer.active ? "success" : "warning"}
+                  />
+                </td>
+                <td>{formatDate(customer.updatedAt)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {visibleCustomers.map((customer) => (
-                <tr key={customer.id}>
-                  <td>{customer.fullName}</td>
-                  <td>{customer.companyName}</td>
-                  <td>
-                    <div>{customer.phone}</div>
-                    <div className="table-muted">{customer.email}</div>
-                  </td>
-                  <td>{`${customer.city}, ${customer.state}`}</td>
-                  <td>{customer.totalOrders}</td>
-                  <td>
-                    <div>{customer.lastOrderNumber ?? "-"}</div>
-                    <div className="table-muted">{formatDate(customer.lastOrderAt)}</div>
-                  </td>
-                  <td>
-                    <StatusBadge
-                      label={customer.status}
-                      tone={customer.active ? "success" : "warning"}
-                    />
-                  </td>
-                  <td>{formatDate(customer.updatedAt)}</td>
-                  <td>
-                    <Link className="button-link button-small" to={`/customers/${customer.id}/edit`}>Edit</Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {visibleCustomers.length === 0 ? <p className="empty-state">No customers found.</p> : null}
-        </div>
+            ))}
+          </tbody>
+        </DataTable>
       ) : null}
     </section>
   );

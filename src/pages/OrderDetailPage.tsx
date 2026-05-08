@@ -121,7 +121,7 @@ export function OrderDetailPage() {
       <PageHeader
         title={`Order ${order.orderNumber}`}
         subtitle="Review product-based pricing and update fulfillment status without layout shifts."
-        actions={<Link className="button-link button-small" to="/orders">Back To Orders</Link>}
+        actions={<Link className="button-link button-link-secondary button-small" to="/orders">Back To Orders</Link>}
       />
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
@@ -207,7 +207,7 @@ export function OrderDetailPage() {
           <div><span>Total</span><strong>{formatCurrency(order.totalAmount, order.currency)}</strong></div>
         </div>
 
-        <button type="button" onClick={() => void saveQuote()} disabled={actionLoading || !canSaveQuote}>
+        <button type="button" className="button-link" onClick={() => void saveQuote()} disabled={actionLoading || !canSaveQuote}>
           {actionLoading ? "Saving..." : "Save Pricing"}
         </button>
       </div>
@@ -220,7 +220,7 @@ export function OrderDetailPage() {
         </label>
         <div className="status-actions">
           {(["CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] as OrderStatus[]).map((status) => (
-            <button key={status} type="button" onClick={() => void updateStatus(status)} disabled={actionLoading}>
+            <button key={status} type="button" className="button-link button-link-secondary button-small" onClick={() => void updateStatus(status)} disabled={actionLoading}>
               {formatStatusLabel(status)}
             </button>
           ))}

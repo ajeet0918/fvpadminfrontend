@@ -93,8 +93,8 @@ export function InvestmentCreatePage() {
             </label>
             <label>Notes<input value={form.notes} onChange={(event) => setForm((p) => ({ ...p, notes: event.target.value }))} /></label>
             <div className="row">
-              <button type="submit" disabled={saving}>{saving ? "Creating..." : "Create Investment"}</button>
-              <button type="button" className="button-muted" onClick={() => navigate("/investors")}>Cancel</button>
+              <button type="submit" className="button-link" disabled={saving}>{saving ? "Creating..." : "Create Investment"}</button>
+              <button type="button" className="button-link button-link-secondary" onClick={() => navigate("/investors")}>Cancel</button>
             </div>
           </form>
         </article>

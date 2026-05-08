@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { ActionDropdown } from "../components/ActionDropdown";
+import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { StatusBadge } from "../components/StatusBadge";
 import {
   approveInvestorPayoutApi,
   createInvestorPayoutRequestApi,
@@ -101,7 +104,7 @@ export function PayoutCenterPage() {
     <section className="admin-page">
       <PageHeader title="Payout & Receipt Center" subtitle="Create payout batches, complete approvals, and download generated receipts." />
 
-      <div className="filter-grid">
+      <div className="filter-grid financial-filter-row">
         <label>
           Investor
           <select value={investorId} onChange={(event) => {
@@ -141,9 +144,10 @@ export function PayoutCenterPage() {
               </label>
             ))}
           </div>
-          <div className="row">
+          <div className="form-actions">
             <button
               type="button"
+              className="button-link"
               disabled={saving || selectedReturnIds.length === 0}
               onClick={() => void perform(() => createInvestorPayoutRequestApi({
                 investorId: Number(investorId),
@@ -161,67 +165,81 @@ export function PayoutCenterPage() {
       {loading ? <p>Loading payout data...</p> : null}
 
       {!loading ? (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Payout Ref</th>
-                <th>Investor</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Transaction</th>
-                <th />
+        <DataTable isEmpty={payouts.length === 0} emptyText="No payouts found.">
+          <thead>
+            <tr>
+              <th>Payout Ref</th>
+              <th>Investor</th>
+              <th className="text-right">Amount</th>
+              <th>Status</th>
+              <th>Transaction</th>
+              <th className="text-right" />
+            </tr>
+          </thead>
+          <tbody>
+            {payouts.map((item) => (
+              <tr key={item.id}>
+                <td className="font-medium">{item.payoutReference}</td>
+                <td>{item.investorCode} - {item.investorName}</td>
+                <td className="text-right tabular-nums">{item.totalAmount.toFixed(2)}</td>
+                <td>
+                  <StatusBadge
+                    label={item.status}
+                    tone={item.status === "PAID" || item.status === "APPROVED" ? "success" : item.status === "REJECTED" || item.status === "FAILED" ? "danger" : "warning"}
+                  />
+                </td>
+                <td className="tabular-nums">{item.transactionReference ?? "-"}</td>
+                <td className="actions-cell justify-end">
+                  <ActionDropdown
+                    triggerLabel="Actions"
+                    items={[
+                      ...(!item.receiptNumber
+                        ? [{
+                          label: "Generate Receipt",
+                          icon: "\u270D",
+                          onClick: () => void perform(() => generateInvestorReceiptApi(item.id))
+                        }]
+                        : []),
+                      ...(item.receiptNumber
+                        ? [{
+                          label: "Download PDF",
+                          icon: "\u2B07",
+                          onClick: () => void handleReceiptDownload(item.receiptNumber!)
+                        }]
+                        : []),
+                      {
+                        label: "Approve",
+                        icon: "\u2713",
+                        onClick: () => void perform(() => approveInvestorPayoutApi(item.id, { notes: "Approved from payout center" }))
+                      },
+                      {
+                        label: "Mark Paid",
+                        icon: "\u20B9",
+                        onClick: () => {
+                          const paymentChannel = window.prompt("Payment channel", item.paymentChannel ?? "Cashfree");
+                          if (!paymentChannel) return;
+                          const transactionReference = window.prompt("Transaction reference", item.transactionReference ?? "");
+                          if (!transactionReference) return;
+                          void perform(() => markInvestorPayoutPaidApi(item.id, {
+                            paymentChannel,
+                            transactionReference,
+                            notes: "Marked paid from payout center"
+                          }));
+                        }
+                      },
+                      {
+                        label: "Reject",
+                        tone: "danger",
+                        icon: "\u2715",
+                        onClick: () => void perform(() => rejectInvestorPayoutApi(item.id, { notes: "Rejected from payout center" }))
+                      }
+                    ]}
+                  />
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {payouts.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.payoutReference}</td>
-                  <td>{item.investorCode} - {item.investorName}</td>
-                  <td>{item.totalAmount.toFixed(2)}</td>
-                  <td>{item.status}</td>
-                  <td>{item.transactionReference ?? "-"}</td>
-                  <td className="actions-cell">
-                    {!item.receiptNumber ? (
-                      <button
-                        type="button"
-                        className="button-link button-small button-muted"
-                        onClick={() => void perform(() => generateInvestorReceiptApi(item.id))}
-                      >
-                        Generate Receipt
-                      </button>
-                    ) : null}
-                    {item.receiptNumber ? (
-                      <button type="button" className="button-link button-small button-muted" onClick={() => void handleReceiptDownload(item.receiptNumber!)}>
-                        Download PDF
-                      </button>
-                    ) : null}
-                    <button type="button" className="button-link button-small" onClick={() => void perform(() => approveInvestorPayoutApi(item.id, { notes: "Approved from payout center" }))}>Approve</button>
-                    <button type="button" className="button-link button-small button-danger" onClick={() => void perform(() => rejectInvestorPayoutApi(item.id, { notes: "Rejected from payout center" }))}>Reject</button>
-                    <button
-                      type="button"
-                      className="button-link button-small"
-                      onClick={() => {
-                        const paymentChannel = window.prompt("Payment channel", item.paymentChannel ?? "Cashfree");
-                        if (!paymentChannel) return;
-                        const transactionReference = window.prompt("Transaction reference", item.transactionReference ?? "");
-                        if (!transactionReference) return;
-                        void perform(() => markInvestorPayoutPaidApi(item.id, {
-                          paymentChannel,
-                          transactionReference,
-                          notes: "Marked paid from payout center"
-                        }));
-                      }}
-                    >
-                      Mark Paid
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {payouts.length === 0 ? <p className="empty-state">No payouts found.</p> : null}
-        </div>
+            ))}
+          </tbody>
+        </DataTable>
       ) : null}
     </section>
   );

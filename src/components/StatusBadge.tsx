@@ -4,5 +4,13 @@ type StatusBadgeProps = {
 };
 
 export function StatusBadge({ label, tone = "neutral" }: StatusBadgeProps) {
-  return <span className={`status-pill status-pill-${tone}`}>{label}</span>;
+  const className = tone === "success"
+    ? "status-pill status-pill-success"
+    : tone === "warning"
+      ? "status-pill status-pill-warning"
+      : tone === "danger"
+        ? "status-pill status-pill-danger"
+        : "status-pill status-pill-neutral";
+
+  return <span className={className}>{label}</span>;
 }
