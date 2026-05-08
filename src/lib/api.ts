@@ -235,6 +235,9 @@ export async function createAdminProductApi(payload: {
   defaultDiscountRate: number;
   status: "ACTIVE" | "INACTIVE";
   imageUrl: string | null;
+  imageOriginalFileName: string | null;
+  imageContentType: string | null;
+  imageSizeBytes: number | null;
   shortDescription: string;
   longDescription: string;
   moq: string;
@@ -248,7 +251,13 @@ export async function createAdminProductApi(payload: {
 export async function uploadProductImageApi(file: File) {
   const formData = new FormData();
   formData.append("file", file);
-  const response = await apiClient.post<{ imageUrl: string; fileName: string }>(
+  const response = await apiClient.post<{
+    imageUrl: string;
+    fileName: string;
+    originalFileName: string | null;
+    contentType: string | null;
+    sizeBytes: number | null;
+  }>(
     "/admin/products/upload-image",
     formData
   );
@@ -265,6 +274,9 @@ export async function updateAdminProductApi(productId: number, payload: {
   defaultDiscountRate: number;
   status: "ACTIVE" | "INACTIVE";
   imageUrl: string | null;
+  imageOriginalFileName: string | null;
+  imageContentType: string | null;
+  imageSizeBytes: number | null;
   shortDescription: string;
   longDescription: string;
   moq: string;

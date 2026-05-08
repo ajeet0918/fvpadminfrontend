@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { StatusBadge } from "../components/StatusBadge";
 import { fetchLeadsApi, readErrorMessage } from "../lib/api";
@@ -106,41 +107,40 @@ export function LeadListPage() {
       {loading ? <p>Loading leads...</p> : null}
 
       {!loading ? (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Company</th>
-                <th>Phone</th>
-                <th>Status</th>
-                <th>Source</th>
-                <th>Assigned</th>
-                <th>Updated</th>
-                <th />
+        <DataTable isEmpty={list.length === 0} emptyText="No leads found.">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Company</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th>Source</th>
+              <th>Assigned</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((lead) => (
+              <tr key={lead.id}>
+                <td>
+                  <Link className="record-id-link" to={`/leads/${lead.id}/edit`}>
+                    {lead.id}
+                  </Link>
+                </td>
+                <td>{lead.fullName}</td>
+                <td>{lead.companyName ?? "-"}</td>
+                <td>{lead.phone}</td>
+                <td>
+                  <StatusBadge label={lead.status} tone={leadTone(lead.status)} />
+                </td>
+                <td>{lead.source}</td>
+                <td>{lead.assignedTo ?? "-"}</td>
+                <td>{formatDate(lead.updatedAt)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {list.map((lead) => (
-                <tr key={lead.id}>
-                  <td>{lead.fullName}</td>
-                  <td>{lead.companyName ?? "-"}</td>
-                  <td>{lead.phone}</td>
-                  <td>
-                    <StatusBadge label={lead.status} tone={leadTone(lead.status)} />
-                  </td>
-                  <td>{lead.source}</td>
-                  <td>{lead.assignedTo ?? "-"}</td>
-                  <td>{formatDate(lead.updatedAt)}</td>
-                  <td>
-                    <Link className="button-link button-small" to={`/leads/${lead.id}/edit`}>Edit</Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {list.length === 0 ? <p className="empty-state">No leads found.</p> : null}
-        </div>
+            ))}
+          </tbody>
+        </DataTable>
       ) : null}
     </section>
   );

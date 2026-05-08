@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { StatusBadge } from "../components/StatusBadge";
 import { fetchInquiriesApi, readErrorMessage } from "../lib/api";
@@ -121,43 +122,40 @@ export function InquiryListPage() {
       {loading ? <p>Loading inquiries...</p> : null}
 
       {!loading ? (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Reference</th>
-                <th>Type</th>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Verification</th>
-                <th>Payment</th>
-                <th>Assigned</th>
-                <th>Updated</th>
-                <th />
+        <DataTable isEmpty={list.length === 0} emptyText="No inquiries found.">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Type</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Verification</th>
+              <th>Payment</th>
+              <th>Assigned</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((inquiry) => (
+              <tr key={inquiry.id}>
+                <td>
+                  <Link className="record-id-link" to={`/inquiries/${inquiry.id}/edit`}>
+                    {inquiry.referenceId ?? `INQ-${inquiry.id}`}
+                  </Link>
+                </td>
+                <td>{inquiry.inquiryType}</td>
+                <td>{inquiry.fullName}</td>
+                <td>
+                  <StatusBadge label={inquiry.status} tone={inquiryTone(inquiry.status)} />
+                </td>
+                <td>{inquiry.verificationStatus}</td>
+                <td>{inquiry.paymentStatus}</td>
+                <td>{inquiry.assignedTo ?? "-"}</td>
+                <td>{formatDate(inquiry.updatedAt)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {list.map((inquiry) => (
-                <tr key={inquiry.id}>
-                  <td>{inquiry.referenceId ?? "-"}</td>
-                  <td>{inquiry.inquiryType}</td>
-                  <td>{inquiry.fullName}</td>
-                  <td>
-                    <StatusBadge label={inquiry.status} tone={inquiryTone(inquiry.status)} />
-                  </td>
-                  <td>{inquiry.verificationStatus}</td>
-                  <td>{inquiry.paymentStatus}</td>
-                  <td>{inquiry.assignedTo ?? "-"}</td>
-                  <td>{formatDate(inquiry.updatedAt)}</td>
-                  <td>
-                    <Link className="button-link button-small" to={`/inquiries/${inquiry.id}/edit`}>Manage</Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {list.length === 0 ? <p className="empty-state">No inquiries found.</p> : null}
-        </div>
+            ))}
+          </tbody>
+        </DataTable>
       ) : null}
     </section>
   );

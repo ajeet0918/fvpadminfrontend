@@ -133,6 +133,9 @@ export type AdminProduct = {
   defaultDiscountRate: number | null;
   status: ProductStatus;
   imageUrl: string | null;
+  imageOriginalFileName: string | null;
+  imageContentType: string | null;
+  imageSizeBytes: number | null;
   shortDescription: string;
   longDescription: string;
   moq: string;
@@ -376,11 +379,17 @@ export type Inquiry = {
   hubOperatingDays: string | null;
   hubCode: string | null;
   idProofUrl: string | null;
+  idProofMetadata: string | null;
   paymentScreenshotUrl: string | null;
+  paymentScreenshotMetadata: string | null;
   aadhaarDocumentUrl: string | null;
+  aadhaarDocumentMetadata: string | null;
   landProofDocumentUrl: string | null;
+  landProofDocumentMetadata: string | null;
   bankPassbookDocumentUrl: string | null;
+  bankPassbookDocumentMetadata: string | null;
   hubDocumentUrl: string | null;
+  hubDocumentMetadata: string | null;
   termsAccepted: boolean;
   agreementId: string | null;
   committedReturnAmount: number | null;

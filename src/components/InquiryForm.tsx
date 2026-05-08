@@ -1,5 +1,6 @@
-import { FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import type { InquiryStatus, OwnerOption, PaymentStatus, VerificationStatus } from "../types/domain";
+import { FormSection } from "./FormSection";
 
 export const inquiryStatuses: InquiryStatus[] = [
   "NEW",
@@ -83,128 +84,130 @@ export function InquiryForm({
   }
 
   return (
-    <article className="admin-form-card">
-      <h3>{title}</h3>
-      <form className="user-form-grid" onSubmit={handleSubmit}>
-        <div className="form-grid-2">
-          <label>
-            Status
-            <select
-              value={values.status}
-              onChange={(event) => setValues((current) => ({ ...current, status: event.target.value as InquiryStatus }))}
-              required
-            >
-              {inquiryStatuses.map((status) => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Verification Status
-            <select
-              value={values.verificationStatus}
-              onChange={(event) => setValues((current) => ({
-                ...current,
-                verificationStatus: event.target.value as VerificationStatus
-              }))}
-            >
-              {verificationStatuses.map((status) => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <div className="form-grid-2">
-          <label>
-            Payment Status
-            <select
-              value={values.paymentStatus}
-              onChange={(event) => setValues((current) => ({
-                ...current,
-                paymentStatus: event.target.value as PaymentStatus
-              }))}
-            >
-              {paymentStatuses.map((status) => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Agreement ID
-            <input
-              value={values.agreementId}
-              onChange={(event) => setValues((current) => ({ ...current, agreementId: event.target.value }))}
-              placeholder="Optional for investor approval stage"
+    <article className="admin-form-card module-form-scroll">
+      <h3 className="m-0 text-lg font-semibold text-text-primary">{title}</h3>
+      <form className="mt-3 grid gap-4" onSubmit={handleSubmit}>
+        <FormSection title="Inquiry Workflow">
+          <div className="form-grid-2">
+            <label>
+              Status
+              <select
+                required
+                value={values.status}
+                onChange={(event) => setValues((current) => ({ ...current, status: event.target.value as InquiryStatus }))}
+              >
+                {inquiryStatuses.map((status) => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Verification Status
+              <select
+                value={values.verificationStatus}
+                onChange={(event) => setValues((current) => ({
+                  ...current,
+                  verificationStatus: event.target.value as VerificationStatus
+                }))}
+              >
+                {verificationStatuses.map((status) => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Payment Status
+              <select
+                value={values.paymentStatus}
+                onChange={(event) => setValues((current) => ({
+                  ...current,
+                  paymentStatus: event.target.value as PaymentStatus
+                }))}
+              >
+                {paymentStatuses.map((status) => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Agreement ID
+              <input
+                value={values.agreementId}
+                onChange={(event) => setValues((current) => ({ ...current, agreementId: event.target.value }))}
+                placeholder="Optional for investor approval stage"
+              />
+            </label>
+
+            <label>
+              Committed Return Amount
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={values.committedReturnAmount}
+                onChange={(event) => setValues((current) => ({ ...current, committedReturnAmount: event.target.value }))}
+                placeholder="Investor return projection"
+              />
+            </label>
+
+            <label>
+              Farmer Action Note
+              <input
+                value={values.farmerActionNote}
+                onChange={(event) => setValues((current) => ({ ...current, farmerActionNote: event.target.value }))}
+                placeholder="Seed allocation or next farmer action"
+              />
+            </label>
+
+            <label>
+              Hub Action Note
+              <input
+                value={values.hubActionNote}
+                onChange={(event) => setValues((current) => ({ ...current, hubActionNote: event.target.value }))}
+                placeholder="Collection hub onboarding or field action"
+              />
+            </label>
+
+            <label>
+              Assigned To
+              <select
+                value={values.assignedTo}
+                disabled={lockAssignedTo}
+                onChange={(event) => setValues((current) => ({ ...current, assignedTo: event.target.value }))}
+              >
+                <option value="">Unassigned</option>
+                {owners.map((owner) => (
+                  <option key={owner.id} value={owner.username}>
+                    {owner.displayName} ({owner.username})
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label className="mt-3 grid gap-1 text-sm font-medium text-text-secondary">
+            Admin Notes
+            <textarea
+              rows={5}
+              value={values.adminNotes}
+              onChange={(event) => setValues((current) => ({ ...current, adminNotes: event.target.value }))}
             />
           </label>
-        </div>
-        <div className="form-grid-2">
-          <label>
-            Committed Return Amount
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={values.committedReturnAmount}
-              onChange={(event) => setValues((current) => ({ ...current, committedReturnAmount: event.target.value }))}
-              placeholder="Investor return projection"
-            />
-          </label>
-          <label>
-            Farmer Action Note
-            <input
-              value={values.farmerActionNote}
-              onChange={(event) => setValues((current) => ({ ...current, farmerActionNote: event.target.value }))}
-              placeholder="Seed allocation or next farmer action"
-            />
-          </label>
-        </div>
-        <div className="form-grid-2">
-          <label>
-            Hub Action Note
-            <input
-              value={values.hubActionNote}
-              onChange={(event) => setValues((current) => ({ ...current, hubActionNote: event.target.value }))}
-              placeholder="Collection hub onboarding or field action"
-            />
-          </label>
-        </div>
-        <div className="form-grid-2">
-          <label>
-            Assigned To
-            <select
-              value={values.assignedTo}
-              onChange={(event) => setValues((current) => ({ ...current, assignedTo: event.target.value }))}
-              disabled={lockAssignedTo}
-            >
-              <option value="">Unassigned</option>
-              {owners.map((owner) => (
-                <option key={owner.id} value={owner.username}>
-                  {owner.displayName} ({owner.username})
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <label>
-          Admin Notes
-          <textarea
-            rows={5}
-            value={values.adminNotes}
-            onChange={(event) => setValues((current) => ({ ...current, adminNotes: event.target.value }))}
-          />
-        </label>
+        </FormSection>
 
         {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
         <div className="form-actions">
-          <button type="submit" disabled={submitting || loading}>
+          <button type="submit" className="button-link" disabled={submitting || loading}>
             {submitting ? "Saving..." : submitLabel}
           </button>
           {onConvertToLead ? (
             <button
               type="button"
-              className="button-link button-small"
+              className="button-link button-link-secondary"
               disabled={disableConvert}
               onClick={() => void onConvertToLead(values)}
             >

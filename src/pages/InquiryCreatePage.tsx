@@ -54,7 +54,7 @@ export function InquiryCreatePage() {
       <PageHeader
         title="Create Inquiry"
         subtitle="Capture a manual inquiry and continue workflow from detail screen."
-        actions={<Link className="button-link button-small" to="/inquiries">Back To Search</Link>}
+        actions={<Link className="button-link button-link-secondary button-small" to="/inquiries">Back To Search</Link>}
       />
 
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
@@ -119,7 +119,7 @@ export function InquiryCreatePage() {
           </label>
 
           <div className="form-actions">
-            <button type="submit" disabled={saving}>
+            <button type="submit" className="button-link" disabled={saving}>
               {saving ? "Saving..." : "Create Inquiry"}
             </button>
           </div>

@@ -1,5 +1,6 @@
-import { FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import type { AdminRole } from "../types/domain";
+import { FormSection } from "./FormSection";
 
 export type UserFormValues = {
   username: string;
@@ -66,67 +67,70 @@ export function UserForm({
   }
 
   return (
-    <article className="admin-form-card">
-      <h3>{title}</h3>
-      <form className="user-form-grid" onSubmit={handleSubmit}>
-        <div className="form-grid-2">
-          <label>
-            Username
-            <input
-              value={values.username}
-              onChange={(event) => setValues((current) => ({ ...current, username: event.target.value }))}
-              required
-              disabled={!showPassword}
-            />
-          </label>
-          <label>
-            First Name
-            <input
-              value={values.firstName}
-              onChange={(event) => setValues((current) => ({ ...current, firstName: event.target.value }))}
-              required
-            />
-          </label>
-          <label>
-            Last Name
-            <input
-              value={values.lastName}
-              onChange={(event) => setValues((current) => ({ ...current, lastName: event.target.value }))}
-              required
-            />
-          </label>
-          <label>
-            Email
-            <input
-              type="email"
-              value={values.email}
-              onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
-              required
-            />
-          </label>
-          <label>
-            Phone
-            <input
-              value={values.phone}
-              onChange={(event) => setValues((current) => ({ ...current, phone: event.target.value }))}
-            />
-          </label>
-          <label>
-            Role
-            <select
-              value={values.roleCode}
-              onChange={(event) => setValues((current) => ({ ...current, roleCode: event.target.value }))}
-              required
-            >
-              <option value="">Select role</option>
-              {roles.map((role) => (
-                <option key={role.id} value={role.code}>
-                  {role.code}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="inline-checkbox">
+    <article className="admin-form-card module-form-scroll">
+      <h3 className="m-0 text-lg font-semibold text-text-primary">{title}</h3>
+      <form className="mt-3 grid gap-4" onSubmit={handleSubmit}>
+        <FormSection title="Profile">
+          <div className="form-grid-2">
+            <label>
+              Username
+              <input
+                required
+                disabled={!showPassword}
+                value={values.username}
+                onChange={(event) => setValues((current) => ({ ...current, username: event.target.value }))}
+              />
+            </label>
+            <label>
+              First Name
+              <input
+                required
+                value={values.firstName}
+                onChange={(event) => setValues((current) => ({ ...current, firstName: event.target.value }))}
+              />
+            </label>
+            <label>
+              Last Name
+              <input
+                required
+                value={values.lastName}
+                onChange={(event) => setValues((current) => ({ ...current, lastName: event.target.value }))}
+              />
+            </label>
+            <label>
+              Email
+              <input
+                required
+                type="email"
+                value={values.email}
+                onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
+              />
+            </label>
+            <label>
+              Phone
+              <input
+                value={values.phone}
+                onChange={(event) => setValues((current) => ({ ...current, phone: event.target.value }))}
+              />
+            </label>
+            <label>
+              Role
+              <select
+                required
+                value={values.roleCode}
+                onChange={(event) => setValues((current) => ({ ...current, roleCode: event.target.value }))}
+              >
+                <option value="">Select role</option>
+                {roles.map((role) => (
+                  <option key={role.id} value={role.code}>
+                    {role.code}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label className="inline-checkbox mt-3">
             <input
               type="checkbox"
               checked={values.active}
@@ -134,57 +138,59 @@ export function UserForm({
             />
             Active
           </label>
-        </div>
+        </FormSection>
 
         {showPassword ? (
-          <label>
-            Password
-            <input
-              type="password"
-              value={values.password}
-              onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
-              minLength={8}
-              required
-            />
-          </label>
+          <FormSection title="Password">
+            <label>
+              Password
+              <input
+                required
+                type="password"
+                value={values.password}
+                onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
+              />
+            </label>
+          </FormSection>
         ) : null}
 
         {showResetPassword && onResetPassword ? (
-          <div className="reset-password-box">
-            <label>
-              Reset Password
-              <input
-                type="password"
-                value={resetPasswordValue}
-                onChange={(event) => setResetPasswordValue(event.target.value)}
-                minLength={8}
-                placeholder="Enter new password"
-              />
-            </label>
-            <button
-              type="button"
-              className="button-muted"
-              disabled={!resetPasswordValue || resetPasswordValue.length < 8}
-              onClick={() => void onResetPassword(resetPasswordValue)}
-            >
-              Update Password
-            </button>
-          </div>
+          <FormSection title="Reset Password">
+            <div className="reset-password-box">
+              <label>
+                New Password
+                <input
+                  type="password"
+                  value={resetPasswordValue}
+                  onChange={(event) => setResetPasswordValue(event.target.value)}
+                  placeholder="Enter new password"
+                />
+              </label>
+              <button
+                type="button"
+                className="button-link button-link-secondary w-fit"
+                disabled={!resetPasswordValue || resetPasswordValue.length < 8}
+                onClick={() => void onResetPassword(resetPasswordValue)}
+              >
+                Update Password
+              </button>
+            </div>
+          </FormSection>
         ) : null}
 
         {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
-        <div className="row">
-          <button type="submit" disabled={submitting || loading}>
+        <div className="form-actions">
+          <button type="submit" className="button-link" disabled={submitting || loading}>
             {submitting ? "Saving..." : submitLabel}
           </button>
           {onCancel ? (
-            <button type="button" className="button-muted" onClick={onCancel}>
+            <button type="button" className="button-link button-link-secondary" onClick={onCancel}>
               Cancel
             </button>
           ) : null}
           {onDeactivateOrDelete ? (
-            <button type="button" className="button-danger button-muted" onClick={() => void onDeactivateOrDelete()}>
+            <button type="button" className="button-link button-danger" onClick={() => void onDeactivateOrDelete()}>
               {deactivateLabel}
             </button>
           ) : null}

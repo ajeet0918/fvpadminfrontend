@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { ActionDropdown } from "../components/ActionDropdown";
+import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import {
   approveMonthlyReturnApi,
@@ -63,6 +65,7 @@ export function MonthlyReturnsPage() {
     companyProfit: "",
     returnPercentage: "5.00"
   });
+  const [activeInvestmentCount, setActiveInvestmentCount] = useState<number | null>(null);
   const [editingReturnId, setEditingReturnId] = useState<number | null>(null);
   const [editingFinalAmount, setEditingFinalAmount] = useState("");
 
@@ -95,6 +98,7 @@ export function MonthlyReturnsPage() {
 
     async function syncReturnPercentage() {
       if (!filters.investorId) {
+        setActiveInvestmentCount(null);
         setGeneration((previous) => ({
           ...previous,
           returnPercentage: previous.returnPercentage.trim() || "5.00"
@@ -110,12 +114,14 @@ export function MonthlyReturnsPage() {
         if (cancelled) return;
 
         const selectedRate = activeInvestments[0]?.monthlyReturnRate;
+        setActiveInvestmentCount(activeInvestments.length);
         setGeneration((previous) => ({
           ...previous,
           returnPercentage: selectedRate ? selectedRate.toFixed(2) : "5.00"
         }));
       } catch {
         if (!cancelled) {
+          setActiveInvestmentCount(null);
           setGeneration((previous) => ({
             ...previous,
             returnPercentage: previous.returnPercentage.trim() || "5.00"
@@ -131,6 +137,11 @@ export function MonthlyReturnsPage() {
   }, [filters.investorId]);
 
   async function generate() {
+    if (filters.investorId && activeInvestmentCount === 0) {
+      setError("No ACTIVE investment found for this investor in the selected period.");
+      return;
+    }
+
     const parsedFund = generation.companyFund.trim() ? Number(generation.companyFund) : null;
     const parsedProfit = Number(generation.companyProfit);
     const parsedReturnPercentage = generation.returnPercentage.trim() ? Number(generation.returnPercentage) : null;
@@ -272,7 +283,9 @@ export function MonthlyReturnsPage() {
           <input value="DRAFT" readOnly className="readonly-field" />
         </label>
         <div className="form-actions monthly-return-actions">
-          <button type="button" onClick={() => void generate()} disabled={saving}>{saving ? "Generating..." : "Generate"}</button>
+          <button type="button" className="button-link w-full justify-center" onClick={() => void generate()} disabled={saving}>
+            {saving ? "Generating..." : "Generate"}
+          </button>
         </div>
       </div>
 
@@ -280,74 +293,92 @@ export function MonthlyReturnsPage() {
       {loading ? <p>Loading monthly returns...</p> : null}
 
       {!loading ? (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Period</th>
-                <th>Investor</th>
-                <th>Investment</th>
-                <th>Calculated</th>
-                <th>Final</th>
-                <th>Status</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => {
-                const isInlineEditing = editingReturnId === item.id;
-                const canEditFinalAmount = item.status !== "PAID";
+        <DataTable isEmpty={items.length === 0} emptyText="No return entries found for selected filters.">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Investor</th>
+              <th>Investment</th>
+              <th>Calculated</th>
+              <th>Final</th>
+              <th>Status</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => {
+              const isInlineEditing = editingReturnId === item.id;
+              const canEditFinalAmount = item.status !== "PAID";
 
-                return (
-                  <tr key={item.id}>
-                    <td>{formatPeriod(item.periodYear, item.periodMonth)}</td>
-                    <td>{item.investorCode} - {item.investorName}</td>
-                    <td>{item.investmentReference}</td>
-                    <td>{item.calculatedAmount.toFixed(2)}</td>
-                    <td>
-                      {isInlineEditing ? (
-                        <input
-                          className="inline-final-amount"
-                          type="number"
-                          min={0.01}
-                          step="0.01"
-                          value={editingFinalAmount}
-                          onChange={(event) => setEditingFinalAmount(event.target.value)}
-                        />
-                      ) : (
-                        item.finalAmount.toFixed(2)
-                      )}
-                    </td>
-                    <td>{item.status}</td>
-                    <td className="actions-cell">
-                      {isInlineEditing ? (
-                        <>
-                          <button type="button" className="button-link button-small" onClick={() => void saveInlineEdit(item)} disabled={saving}>Save</button>
-                          <button type="button" className="button-link button-small button-muted" onClick={cancelInlineEdit} disabled={saving}>Cancel</button>
-                        </>
-                      ) : (
-                        <button
-                          type="button"
-                          className="button-link button-small icon-button"
-                          title="Edit final amount"
-                          disabled={!canEditFinalAmount || saving}
-                          onClick={() => startInlineEdit(item)}
-                        >
-                          {"\u270E"}
-                        </button>
-                      )}
-                      <button type="button" className="button-link button-small" onClick={() => void applyAction(() => submitMonthlyReturnApi(item.id, { notes: "Submitted for approval" }))} disabled={saving || isInlineEditing}>Submit</button>
-                      <button type="button" className="button-link button-small" onClick={() => void applyAction(() => approveMonthlyReturnApi(item.id, { notes: "Approved" }))} disabled={saving || isInlineEditing}>Approve</button>
-                      <button type="button" className="button-link button-small button-danger" onClick={() => void applyAction(() => rejectMonthlyReturnApi(item.id, { notes: "Rejected" }))} disabled={saving || isInlineEditing}>Reject</button>
-                      <button type="button" className="button-link button-small button-muted" onClick={() => void applyAction(() => holdMonthlyReturnApi(item.id, { notes: "On hold" }))} disabled={saving || isInlineEditing}>Hold</button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {items.length === 0 ? <p className="empty-state">No return entries found for selected filters.</p> : null}
-        </div>
+              return (
+                <tr key={item.id}>
+                  <td>{formatPeriod(item.periodYear, item.periodMonth)}</td>
+                  <td>{item.investorCode} - {item.investorName}</td>
+                  <td>{item.investmentReference}</td>
+                  <td>{item.calculatedAmount.toFixed(2)}</td>
+                  <td>
+                    {isInlineEditing ? (
+                      <input
+                        className="inline-final-amount"
+                        type="number"
+                        min={0.01}
+                        step="0.01"
+                        value={editingFinalAmount}
+                        onChange={(event) => setEditingFinalAmount(event.target.value)}
+                      />
+                    ) : (
+                      item.finalAmount.toFixed(2)
+                    )}
+                  </td>
+                  <td>{item.status}</td>
+                  <td className="actions-cell">
+                    {isInlineEditing ? (
+                      <>
+                        <button type="button" className="button-link button-small" onClick={() => void saveInlineEdit(item)} disabled={saving}>Save</button>
+                        <button type="button" className="button-link button-small button-link-secondary" onClick={cancelInlineEdit} disabled={saving}>Cancel</button>
+                      </>
+                    ) : (
+                      <ActionDropdown
+                        triggerLabel="Change Status"
+                        disabled={saving}
+                        items={[
+                          ...(canEditFinalAmount
+                            ? [{
+                              label: "Edit Final Amount",
+                              icon: "\u270E",
+                              onClick: () => startInlineEdit(item)
+                            }]
+                            : []),
+                          {
+                            label: "Submit",
+                            icon: "\u21E7",
+                            onClick: () => void applyAction(() => submitMonthlyReturnApi(item.id, { notes: "Submitted for approval" }))
+                          },
+                          {
+                            label: "Approve",
+                            icon: "\u2713",
+                            onClick: () => void applyAction(() => approveMonthlyReturnApi(item.id, { notes: "Approved" }))
+                          },
+                          {
+                            label: "Hold",
+                            icon: "\u23F8",
+                            onClick: () => void applyAction(() => holdMonthlyReturnApi(item.id, { notes: "On hold" }))
+                          },
+                          {
+                            label: "Reject",
+                            tone: "danger" as const,
+                            icon: "\u2715",
+                            onClick: () => void applyAction(() => rejectMonthlyReturnApi(item.id, { notes: "Rejected" }))
+                          }
+                        ]}
+                      />
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </DataTable>
       ) : null}
     </section>
   );

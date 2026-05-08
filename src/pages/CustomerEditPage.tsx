@@ -138,7 +138,6 @@ export function CustomerEditPage() {
         loading={loading}
         onSubmit={handleSubmit}
         onCancel={() => navigate("/customers")}
-        submitLabel="Save Changes"
       />
     </section>
   );

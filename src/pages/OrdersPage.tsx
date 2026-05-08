@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { StatusBadge } from "../components/StatusBadge";
 import { fetchOrdersApi, readErrorMessage } from "../lib/api";
 import type { Order } from "../types/domain";
 
@@ -59,20 +61,27 @@ export function OrdersPage() {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [orders, searchTerm, statusFilter]);
 
+  function getStatusTone(status: Order["status"]) {
+    if (status === "PENDING_REVIEW" || status === "PROCESSING") return "warning";
+    if (status === "CANCELLED") return "danger";
+    return "success";
+  }
+
   return (
     <section className="admin-page">
       <PageHeader
-        title="Orders"
-        subtitle="Search, filter, and manage product-priced orders with clean status operations."
+        title="Orders Table"
+        subtitle="SaaS-style searchable CRM table for order operations."
+        actions={<Link className="button-link" to="/orders">Refresh</Link>}
       />
 
-      <div className="filter-grid">
+      <div className="table-toolbar">
         <label>
           Search
           <input
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search by order number, company, or customer"
+            onChange={(event) => setSearchTerm(event.target.value.trimStart())}
+            placeholder="Search by ID, name, or customer"
           />
         </label>
         <label>
@@ -91,39 +100,34 @@ export function OrdersPage() {
       {loading ? <p>Loading orders...</p> : null}
 
       {!loading ? (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Order</th>
-                <th>Company</th>
-                <th>Status</th>
-                <th>Total</th>
-                <th>Created</th>
-                <th />
+        <DataTable isEmpty={filteredOrders.length === 0} emptyText="No orders match your filters.">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredOrders.map((order) => (
+              <tr key={order.id}>
+                <td>
+                  <Link className="record-id-link" to={`/orders/${order.id}`}>
+                    {order.orderNumber}
+                  </Link>
+                </td>
+                <td>{order.companyName || order.fullName}</td>
+                <td>
+                  <StatusBadge label={formatStatusLabel(order.status)} tone={getStatusTone(order.status)} />
+                </td>
+                <td>{formatDate(order.createdAt)}</td>
+                <td>{order.totalAmount === null ? "Pending" : order.totalAmount.toFixed(2)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map((order) => (
-                <tr key={order.id}>
-                  <td>{order.orderNumber}</td>
-                  <td>{order.companyName}</td>
-                  <td>
-                    <span className="status-pill">{formatStatusLabel(order.status)}</span>
-                  </td>
-                  <td>{order.totalAmount === null ? "Pending Pricing" : order.totalAmount.toFixed(2)}</td>
-                  <td>{formatDate(order.createdAt)}</td>
-                  <td>
-                    <Link className="button-link button-small" to={`/orders/${order.id}`}>
-                      Manage
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filteredOrders.length === 0 ? <p className="empty-state">No orders match your filters.</p> : null}
-        </div>
+            ))}
+          </tbody>
+        </DataTable>
       ) : null}
     </section>
   );
