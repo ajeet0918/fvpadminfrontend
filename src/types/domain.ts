@@ -405,3 +405,45 @@ export type Inquiry = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type AdminSettingValueType = "STRING" | "BOOLEAN" | "NUMBER" | "JSON";
+
+export type AdminSetting = {
+  id: number;
+  settingKey: string;
+  category: string;
+  value: string;
+  valueType: AdminSettingValueType;
+  secret: boolean;
+  active: boolean;
+  description: string;
+  updatedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SmtpConfig = {
+  id: number | null;
+  active: boolean;
+  host: string;
+  port: number | null;
+  username: string;
+  password: string;
+  fromEmail: string;
+  fromName: string;
+  authEnabled: boolean;
+  startTlsEnabled: boolean;
+  frontendBaseUrl: string;
+  updatedBy: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+export type PortalAccountInvite = {
+  portalUserId: number;
+  username: string;
+  email: string;
+  userType: string;
+  status: string;
+  message: string;
+};
