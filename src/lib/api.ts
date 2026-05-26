@@ -30,6 +30,10 @@ import type {
   Order,
   OrderStatus,
   PaymentStatus,
+  AdminSetting,
+  AdminSettingValueType,
+  PortalAccountInvite,
+  SmtpConfig,
   VerificationStatus
 } from "../types/domain";
 
@@ -403,6 +407,11 @@ export async function convertInquiryToLeadApi(inquiryId: number, payload: {
   return response.data;
 }
 
+export async function createPortalUserForInquiryApi(inquiryId: number) {
+  const response = await apiClient.post<PortalAccountInvite>(`/admin/inquiries/${inquiryId}/portal-user`);
+  return response.data;
+}
+
 export async function fetchInvestorsApi(filters: {
   search?: string;
   status?: InvestorAccountStatus | "";
@@ -653,6 +662,74 @@ export async function downloadInvestorReceiptFileApi(receiptNumber: string) {
     `/admin/investor-platform/receipts/number/${encodeURIComponent(receiptNumber)}/download`,
     { responseType: "blob" }
   );
+  return response.data;
+}
+
+function normalizeAdminDocumentEndpoint(path: string) {
+  const trimmed = path.trim();
+  const legacyDocumentMatch = trimmed.match(/^\/api\/documents\/([^/]+)\/content$/);
+  if (legacyDocumentMatch) {
+    return `/admin/documents/${legacyDocumentMatch[1]}/content`;
+  }
+
+  const adminDocumentMatch = trimmed.match(/^\/api\/admin\/documents\/([^/]+)\/content$/);
+  if (adminDocumentMatch) {
+    return `/admin/documents/${adminDocumentMatch[1]}/content`;
+  }
+
+  if (trimmed.startsWith("/api/")) {
+    return trimmed.substring(4);
+  }
+
+  return trimmed;
+}
+
+export async function downloadAdminDocumentContentApi(path: string) {
+  const response = await apiClient.get<Blob>(
+    normalizeAdminDocumentEndpoint(path),
+    { responseType: "blob" }
+  );
+  return response.data;
+}
+
+export async function fetchAdminSettingsApi(category?: string) {
+  const response = await apiClient.get<AdminSetting[]>("/admin/settings", {
+    params: category ? { category } : undefined
+  });
+  return response.data;
+}
+
+export async function saveAdminSettingsApi(settings: Array<{
+  settingKey: string;
+  category: string;
+  value: string;
+  valueType: AdminSettingValueType;
+  secret: boolean;
+  active: boolean;
+  description: string;
+}>) {
+  const response = await apiClient.post<AdminSetting[]>("/admin/settings/bulk", { settings });
+  return response.data;
+}
+
+export async function fetchSmtpConfigApi() {
+  const response = await apiClient.get<SmtpConfig>("/admin/settings/smtp");
+  return response.data;
+}
+
+export async function saveSmtpConfigApi(payload: {
+  active: boolean;
+  host: string;
+  port: number | null;
+  username: string;
+  password: string;
+  fromEmail: string;
+  fromName: string;
+  authEnabled: boolean;
+  startTlsEnabled: boolean;
+  frontendBaseUrl: string;
+}) {
+  const response = await apiClient.put<SmtpConfig>("/admin/settings/smtp", payload);
   return response.data;
 }
 

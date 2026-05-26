@@ -3,8 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import { InquiryForm, type InquiryFormValues } from "../components/InquiryForm";
 import { PageHeader } from "../components/PageHeader";
 import {
-  API_BASE_URL,
+  createPortalUserForInquiryApi,
   convertInquiryToLeadApi,
+  downloadAdminDocumentContentApi,
   fetchAssignableOwnersApi,
   fetchInquiryApi,
   readErrorMessage,
@@ -39,6 +40,7 @@ export function InquiryEditPage() {
   const [inquiry, setInquiry] = useState<Inquiry | null>(null);
   const [values, setValues] = useState<InquiryFormValues>(emptyValues);
   const [loading, setLoading] = useState(true);
+  const [sendingInvite, setSendingInvite] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -138,12 +140,44 @@ export function InquiryEditPage() {
     }
   }
 
+  async function handlePortalInvite() {
+    try {
+      setSendingInvite(true);
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      const response = await createPortalUserForInquiryApi(inquiryId);
+      setSuccessMessage(`${response.message} Username: ${response.username}`);
+    } catch (error) {
+      setErrorMessage(readErrorMessage(error, "Unable to send portal invite."));
+    } finally {
+      setSendingInvite(false);
+    }
+  }
+
+  const canCreatePortalUser = inquiry?.inquiryType === "FARMER"
+    || inquiry?.inquiryType === "INVESTOR"
+    || inquiry?.inquiryType === "COLLECTION_HUB";
+
   return (
     <section className="admin-page">
       <PageHeader
         title="Inquiry Detail"
         subtitle="Review inquiry context and progress it through pipeline states."
-        actions={<Link className="button-link button-small" to="/inquiries">Back To Search</Link>}
+        actions={(
+          <div className="form-actions">
+            {canCreatePortalUser ? (
+              <button
+                type="button"
+                className="button-link button-small"
+                onClick={() => void handlePortalInvite()}
+                disabled={sendingInvite}
+              >
+                {sendingInvite ? "Sending..." : "Send Portal Invite"}
+              </button>
+            ) : null}
+            <Link className="button-link button-small button-link-secondary" to="/inquiries">Back To Search</Link>
+          </div>
+        )}
       />
       {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
       {successMessage ? <p className="success-text">{successMessage}</p> : null}
@@ -302,14 +336,50 @@ function InfoItem({ label, value }: { label: string; value: string | number | nu
 }
 
 function DocumentLink({ label, path }: { label: string; path: string | null }) {
+  const [opening, setOpening] = useState(false);
+
   if (!path) {
     return null;
   }
 
-  const href = path.startsWith("/") ? `${API_BASE_URL}${path}` : path;
+  async function handleOpen() {
+    if (!path) {
+      return;
+    }
+
+    try {
+      setOpening(true);
+      if (/^https?:\/\//i.test(path)) {
+        window.open(path, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      const previewWindow = window.open("about:blank", "_blank");
+      if (!previewWindow) {
+        throw new Error("Browser blocked document preview.");
+      }
+      previewWindow.opener = null;
+      previewWindow.document.write("Loading document preview...");
+
+      const blob = await downloadAdminDocumentContentApi(path);
+      const objectUrl = URL.createObjectURL(blob);
+      previewWindow.location.href = objectUrl;
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+    } catch (error) {
+      alert(readErrorMessage(error, `Unable to open ${label}.`));
+    } finally {
+      setOpening(false);
+    }
+  }
+
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="button-link button-small button-link-secondary">
-      View {label}
-    </a>
+    <button
+      type="button"
+      className="button-link button-small button-link-secondary"
+      onClick={handleOpen}
+      disabled={opening}
+    >
+      {opening ? "Opening..." : `View ${label}`}
+    </button>
   );
 }
