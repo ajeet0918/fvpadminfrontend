@@ -14,11 +14,16 @@ export function LoginPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const normalizedUsername = username.trim();
+    if (!normalizedUsername || !password) {
+      setErrorMessage("Enter your username and password.");
+      return;
+    }
     setSubmitting(true);
     setErrorMessage(null);
 
     try {
-      const response = await loginApi({ username, password });
+      const response = await loginApi({ username: normalizedUsername, password });
       setAccessToken(response.accessToken);
       const nextPath = (location.state as { from?: string } | null)?.from ?? "/";
       navigate(nextPath, { replace: true });
@@ -31,31 +36,40 @@ export function LoginPage() {
 
   return (
     <section className="login-shell">
-      <article className="login-card login-card-elevated">
+      <article className="login-card login-card-elevated" aria-labelledby="admin-login-title">
         <form className="grid gap-4" onSubmit={handleSubmit}>
-          <div>
-            <h1 className="m-0 text-2xl font-semibold text-text-primary">Admin Login</h1>
-            <p className="mt-1 text-sm text-text-secondary">
-              Sign in to manage products, orders, inquiries, and payouts.
-            </p>
+          <div className="login-card-header">
+            <span className="login-brand-mark">FVP</span>
+            <div>
+              <p className="m-0 text-xs font-semibold uppercase tracking-wide text-brand">Admin Console</p>
+              <h1 id="admin-login-title" className="m-0 text-2xl font-semibold text-text-primary">Sign in</h1>
+              <p className="mt-1 text-sm text-text-secondary">
+                Manage products, orders, inquiries, and payouts.
+              </p>
+            </div>
           </div>
 
-          <label>
+          <label htmlFor="admin-username">
             Username
             <input
+              id="admin-username"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
+              autoComplete="username"
+              placeholder="stageadmin"
               required
             />
           </label>
 
-          <label>
+          <label htmlFor="admin-password">
             Password
             <div className="admin-password-wrap">
               <input
+                id="admin-password"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
                 required
               />
               <button
@@ -82,7 +96,9 @@ export function LoginPage() {
             {submitting ? "Signing in..." : "Sign in"}
           </button>
 
-          {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+          {errorMessage ? <p className="error-text" role="alert">{errorMessage}</p> : null}
+
+          <p className="login-footnote">Access is restricted to approved FVP operations users.</p>
         </form>
       </article>
     </section>

@@ -86,14 +86,29 @@
 
   .login-shell {
     @apply min-h-screen grid place-items-center p-6 bg-app;
+    background:
+      linear-gradient(180deg, rgba(240,253,244,0.88), rgba(249,250,251,0.96)),
+      #f5f7f4;
   }
 
   .login-card {
-    @apply w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-card;
+    @apply w-full max-w-md rounded-2xl border border-border bg-card p-7 shadow-card;
   }
 
   .login-card-elevated {
-    @apply border-green-100 shadow-[0_22px_55px_rgba(17,24,39,0.12)];
+    @apply border-green-100 shadow-[0_18px_44px_rgba(17,24,39,0.12)];
+  }
+
+  .login-card-header {
+    @apply flex items-start gap-3;
+  }
+
+  .login-brand-mark {
+    @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand text-sm font-bold text-white;
+  }
+
+  .login-footnote {
+    @apply m-0 border-t border-border pt-3 text-center text-xs text-text-secondary;
   }
 
   .admin-password-wrap {
