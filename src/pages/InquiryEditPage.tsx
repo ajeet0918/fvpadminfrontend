@@ -5,6 +5,7 @@ import { PageHeader } from "../components/PageHeader";
 import {
   createPortalUserForInquiryApi,
   convertInquiryToLeadApi,
+  createErrorWithCause,
   downloadAdminDocumentContentApi,
   fetchAssignableOwnersApi,
   fetchInquiryApi,
@@ -112,7 +113,7 @@ export function InquiryEditPage() {
       });
       setSuccessMessage("Inquiry updated successfully.");
     } catch (error) {
-      throw new Error(readErrorMessage(error, "Unable to update inquiry."));
+      throw createErrorWithCause(error, "Unable to update inquiry.");
     }
   }
 
@@ -136,7 +137,7 @@ export function InquiryEditPage() {
       });
       setSuccessMessage("Inquiry converted to lead successfully.");
     } catch (error) {
-      throw new Error(readErrorMessage(error, "Unable to convert inquiry."));
+      throw createErrorWithCause(error, "Unable to convert inquiry.");
     }
   }
 

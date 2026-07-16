@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LeadForm, type LeadFormValues } from "../components/LeadForm";
 import { PageHeader } from "../components/PageHeader";
-import { createLeadApi, fetchAssignableOwnersApi, readErrorMessage } from "../lib/api";
+import { createErrorWithCause, createLeadApi, fetchAssignableOwnersApi, readErrorMessage } from "../lib/api";
 import { getCurrentRole, getCurrentUsername } from "../lib/auth";
 import type { OwnerOption } from "../types/domain";
 
@@ -52,7 +52,7 @@ export function LeadCreatePage() {
       });
       navigate("/leads");
     } catch (error) {
-      throw new Error(readErrorMessage(error, "Unable to create lead."));
+      throw createErrorWithCause(error, "Unable to create lead.");
     }
   }
 

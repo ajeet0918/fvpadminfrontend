@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "../components/PageHeader";
 import {
   createInvestmentApi,
@@ -29,7 +29,7 @@ export function InvestmentListPage() {
   });
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [nextInvestments, nextInvestors] = await Promise.all([
@@ -43,11 +43,11 @@ export function InvestmentListPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [statusFilter]);
 
   useEffect(() => {
     void loadData();
-  }, [statusFilter]);
+  }, [loadData]);
 
   const editItem = useMemo(
     () => investments.find((item) => item.id === editingId) ?? null,

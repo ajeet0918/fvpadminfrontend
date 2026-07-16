@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { StatusBadge } from "../components/StatusBadge";
@@ -90,7 +90,7 @@ export function InvestorListPage() {
     return map;
   }, [investments]);
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMessage(null);
@@ -108,11 +108,11 @@ export function InvestorListPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [investmentSearch, investmentStatusFilter, investorSearch, investorStatusFilter, verificationStatusFilter]);
 
   useEffect(() => {
     void loadData();
-  }, [investorSearch, investorStatusFilter, verificationStatusFilter, investmentSearch, investmentStatusFilter]);
+  }, [loadData]);
 
   function openCreatePage() {
     setMode("CREATE");

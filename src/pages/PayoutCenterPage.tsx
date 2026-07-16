@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionDropdown } from "../components/ActionDropdown";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
@@ -30,7 +30,7 @@ export function PayoutCenterPage() {
   const [statusFilter, setStatusFilter] = useState<InvestorPayoutStatus | "">("");
   const [selectedReturnIds, setSelectedReturnIds] = useState<number[]>([]);
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [nextInvestors, nextReturns, nextPayouts] = await Promise.all([
@@ -46,11 +46,11 @@ export function PayoutCenterPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [investorId, statusFilter]);
 
   useEffect(() => {
     void loadData();
-  }, [investorId, statusFilter]);
+  }, [loadData]);
 
   const groupedReturns = useMemo(() => {
     const map = new Map<number, InvestorMonthlyReturn[]>();

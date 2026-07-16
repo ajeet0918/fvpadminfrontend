@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionDropdown } from "../components/ActionDropdown";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
@@ -69,7 +69,7 @@ export function MonthlyReturnsPage() {
   const [editingReturnId, setEditingReturnId] = useState<number | null>(null);
   const [editingFinalAmount, setEditingFinalAmount] = useState("");
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [nextInvestors, nextReturns] = await Promise.all([
@@ -87,11 +87,11 @@ export function MonthlyReturnsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filters.investorId, filters.month, filters.year]);
 
   useEffect(() => {
     void loadData();
-  }, [filters.investorId, filters.year, filters.month]);
+  }, [loadData]);
 
   useEffect(() => {
     let cancelled = false;

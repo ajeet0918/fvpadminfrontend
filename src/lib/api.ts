@@ -755,3 +755,7 @@ export function readErrorMessage(error: unknown, fallback: string) {
 
   return fallback;
 }
+
+export function createErrorWithCause(error: unknown, fallback: string) {
+  return Object.assign(new Error(readErrorMessage(error, fallback)), { cause: error });
+}
