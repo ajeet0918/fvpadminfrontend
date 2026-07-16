@@ -301,12 +301,12 @@ export function InquiryEditPage() {
           ) : null}
 
           <div className="inquiry-doc-links">
-            <DocumentLink label="ID Proof" path={inquiry.idProofUrl} />
-            <DocumentLink label="Payment Screenshot" path={inquiry.paymentScreenshotUrl} />
-            <DocumentLink label="Aadhaar Document" path={inquiry.aadhaarDocumentUrl} />
-            <DocumentLink label="Land Proof" path={inquiry.landProofDocumentUrl} />
-            <DocumentLink label="Bank Passbook" path={inquiry.bankPassbookDocumentUrl} />
-            <DocumentLink label="Hub Document" path={inquiry.hubDocumentUrl} />
+            <DocumentLink label="ID Proof" documentId={inquiry.idProofDocumentId} path={inquiry.idProofUrl} />
+            <DocumentLink label="Payment Screenshot" documentId={inquiry.paymentScreenshotDocumentId} path={inquiry.paymentScreenshotUrl} />
+            <DocumentLink label="Aadhaar Document" documentId={inquiry.aadhaarDocumentId} path={inquiry.aadhaarDocumentUrl} />
+            <DocumentLink label="Land Proof" documentId={inquiry.landProofDocumentId} path={inquiry.landProofDocumentUrl} />
+            <DocumentLink label="Bank Passbook" documentId={inquiry.bankPassbookDocumentId} path={inquiry.bankPassbookDocumentUrl} />
+            <DocumentLink label="Hub Document" documentId={inquiry.hubDocumentId} path={inquiry.hubDocumentUrl} />
           </div>
         </article>
       ) : null}
@@ -335,22 +335,23 @@ function InfoItem({ label, value }: { label: string; value: string | number | nu
   );
 }
 
-function DocumentLink({ label, path }: { label: string; path: string | null }) {
+function DocumentLink({ label, documentId, path }: { label: string; documentId: string | null; path: string | null }) {
   const [opening, setOpening] = useState(false);
+  const documentReference = documentId ?? path;
 
-  if (!path) {
+  if (!documentReference) {
     return null;
   }
 
   async function handleOpen() {
-    if (!path) {
+    if (!documentReference) {
       return;
     }
 
     try {
       setOpening(true);
-      if (/^https?:\/\//i.test(path)) {
-        window.open(path, "_blank", "noopener,noreferrer");
+      if (/^https?:\/\//i.test(documentReference)) {
+        window.open(documentReference, "_blank", "noopener,noreferrer");
         return;
       }
 
@@ -361,7 +362,7 @@ function DocumentLink({ label, path }: { label: string; path: string | null }) {
       previewWindow.opener = null;
       previewWindow.document.write("Loading document preview...");
 
-      const blob = await downloadAdminDocumentContentApi(path);
+      const blob = await downloadAdminDocumentContentApi(documentReference);
       const objectUrl = URL.createObjectURL(blob);
       previewWindow.location.href = objectUrl;
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
