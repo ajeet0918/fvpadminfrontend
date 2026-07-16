@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { LeadForm, type LeadFormValues } from "../components/LeadForm";
 import { PageHeader } from "../components/PageHeader";
 import {
+  createErrorWithCause,
   deleteLeadApi,
   fetchAssignableOwnersApi,
   fetchLeadApi,
@@ -90,7 +91,7 @@ export function LeadEditPage() {
       });
       setSuccessMessage("Lead updated successfully.");
     } catch (error) {
-      throw new Error(readErrorMessage(error, "Unable to update lead."));
+      throw createErrorWithCause(error, "Unable to update lead.");
     }
   }
 

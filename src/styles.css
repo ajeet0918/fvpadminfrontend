@@ -35,6 +35,10 @@
 }
 
 @layer components {
+  .auth-check-screen {
+    @apply min-h-screen bg-app;
+  }
+
   .admin-main-content {
     @apply min-h-full p-4 md:p-6;
   }

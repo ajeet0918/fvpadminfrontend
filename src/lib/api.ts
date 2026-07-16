@@ -109,6 +109,10 @@ export async function fetchAssignableOwnersApi() {
   return response.data;
 }
 
+export async function validateAdminSessionApi() {
+  await apiClient.get<OwnerOption[]>("/admin/owners");
+}
+
 export async function fetchAdminUsersApi() {
   const response = await apiClient.get<AdminUser[]>("/admin/users");
   return response.data;
@@ -238,6 +242,7 @@ export async function createAdminProductApi(payload: {
   defaultTaxRate: number;
   defaultDiscountRate: number;
   status: "ACTIVE" | "INACTIVE";
+  imageDocumentId: string | null;
   imageUrl: string | null;
   imageOriginalFileName: string | null;
   imageContentType: string | null;
@@ -256,6 +261,7 @@ export async function uploadProductImageApi(file: File) {
   const formData = new FormData();
   formData.append("file", file);
   const response = await apiClient.post<{
+    documentId: string;
     imageUrl: string;
     fileName: string;
     originalFileName: string | null;
@@ -277,6 +283,7 @@ export async function updateAdminProductApi(productId: number, payload: {
   defaultTaxRate: number;
   defaultDiscountRate: number;
   status: "ACTIVE" | "INACTIVE";
+  imageDocumentId: string | null;
   imageUrl: string | null;
   imageOriginalFileName: string | null;
   imageContentType: string | null;
@@ -667,6 +674,10 @@ export async function downloadInvestorReceiptFileApi(receiptNumber: string) {
 
 function normalizeAdminDocumentEndpoint(path: string) {
   const trimmed = path.trim();
+  if (/^[0-9a-fA-F-]{36}$/.test(trimmed)) {
+    return `/admin/documents/${trimmed}/content`;
+  }
+
   const legacyDocumentMatch = trimmed.match(/^\/api\/documents\/([^/]+)\/content$/);
   if (legacyDocumentMatch) {
     return `/admin/documents/${legacyDocumentMatch[1]}/content`;
@@ -743,4 +754,8 @@ export function readErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback;
+}
+
+export function createErrorWithCause(error: unknown, fallback: string) {
+  return Object.assign(new Error(readErrorMessage(error, fallback)), { cause: error });
 }

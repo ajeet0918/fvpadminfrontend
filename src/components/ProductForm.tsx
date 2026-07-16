@@ -16,6 +16,7 @@ export type ProductFormValues = {
   shortDescription: string;
   longDescription: string;
   moq: string;
+  imageDocumentId: string;
   imageUrl: string;
   imageOriginalFileName: string;
   imageContentType: string;
@@ -101,6 +102,7 @@ export function ProductForm({
       const uploadResult = await uploadProductImageApi(file);
       setValues((current) => ({
         ...current,
+        imageDocumentId: uploadResult.documentId,
         imageUrl: uploadResult.imageUrl,
         imageOriginalFileName: uploadResult.originalFileName ?? "",
         imageContentType: uploadResult.contentType ?? "",
@@ -266,6 +268,7 @@ export function ProductForm({
                 value={values.imageUrl}
                 onChange={(event) => setValues((current) => ({
                   ...current,
+                  imageDocumentId: "",
                   imageUrl: event.target.value,
                   imageOriginalFileName: "",
                   imageContentType: "",
