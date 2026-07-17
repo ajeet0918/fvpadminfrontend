@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { PageHeader } from "../components/PageHeader";
 import { UserForm, type UserFormValues } from "../components/UserForm";
 import {
@@ -33,6 +34,8 @@ export function UserEditPage() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [confirmationAction, setConfirmationAction] = useState<"deactivate" | "delete" | null>(null);
+  const [confirmingAction, setConfirmingAction] = useState(false);
 
   const isValidId = useMemo(() => Number.isFinite(userId), [userId]);
 
@@ -91,25 +94,42 @@ export function UserEditPage() {
 
   async function handleDeactivateOrDelete() {
     if (values.active) {
-      const confirmedDeactivate = window.confirm("Deactivate this user?");
-      if (!confirmedDeactivate) return;
-      await updateAdminUserApi(userId, {
-        firstName: values.firstName.trim(),
-        lastName: values.lastName.trim(),
-        email: values.email.trim().toLowerCase(),
-        phone: values.phone.trim(),
-        roleCode: values.roleCode,
-        active: false
-      });
-      setValues((current) => ({ ...current, active: false }));
-      setSuccessMessage("User deactivated.");
+      setConfirmationAction("deactivate");
       return;
     }
 
-    const confirmedDelete = window.confirm("User is inactive. Delete permanently?");
-    if (!confirmedDelete) return;
-    await deleteAdminUserApi(userId);
-    navigate("/users");
+    setConfirmationAction("delete");
+  }
+
+  async function confirmDeactivateOrDelete() {
+    if (!confirmationAction) return;
+
+    setConfirmingAction(true);
+    setErrorMessage(null);
+    try {
+      if (confirmationAction === "deactivate") {
+        await updateAdminUserApi(userId, {
+          firstName: values.firstName.trim(),
+          lastName: values.lastName.trim(),
+          email: values.email.trim().toLowerCase(),
+          phone: values.phone.trim(),
+          roleCode: values.roleCode,
+          active: false
+        });
+        setValues((current) => ({ ...current, active: false }));
+        setSuccessMessage("User deactivated.");
+        setConfirmationAction(null);
+        return;
+      }
+
+      await deleteAdminUserApi(userId);
+      navigate("/users");
+    } catch (error) {
+      setErrorMessage(readErrorMessage(error, "Unable to update user status."));
+      setConfirmationAction(null);
+    } finally {
+      setConfirmingAction(false);
+    }
   }
 
   return (
@@ -133,6 +153,19 @@ export function UserEditPage() {
         onResetPassword={handleResetPassword}
         onDeactivateOrDelete={handleDeactivateOrDelete}
         deactivateLabel={values.active ? "Deactivate" : "Delete"}
+      />
+      <ConfirmationDialog
+        open={confirmationAction !== null}
+        title={confirmationAction === "deactivate" ? "Deactivate user?" : "Delete user permanently?"}
+        message={
+          confirmationAction === "deactivate"
+            ? "The user will no longer be able to sign in, but their records will remain available."
+            : "This will permanently delete the inactive user. This action cannot be undone."
+        }
+        confirmLabel={confirmationAction === "deactivate" ? "Deactivate User" : "Delete User"}
+        busy={confirmingAction}
+        onConfirm={() => void confirmDeactivateOrDelete()}
+        onCancel={() => setConfirmationAction(null)}
       />
     </section>
   );

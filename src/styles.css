@@ -560,4 +560,32 @@
   .inquiry-doc-links {
     @apply flex flex-wrap gap-2;
   }
+
+  .confirmation-backdrop {
+    @apply fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4;
+  }
+
+  .confirmation-dialog {
+    @apply w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-[0_24px_70px_rgba(15,23,42,0.24)];
+  }
+
+  .confirmation-dialog-header {
+    @apply flex items-start gap-3;
+  }
+
+  .confirmation-dialog-icon {
+    @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-lg font-bold text-danger;
+  }
+
+  .confirmation-dialog h2 {
+    @apply m-0 text-base font-semibold text-text-primary;
+  }
+
+  .confirmation-dialog p {
+    @apply mt-2 text-sm leading-6 text-text-secondary;
+  }
+
+  .confirmation-dialog-actions {
+    @apply mt-5 flex flex-wrap justify-end gap-2 border-t border-border pt-4;
+  }
 }

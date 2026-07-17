@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { PageHeader } from "../components/PageHeader";
 import { ProductForm, type ProductFormValues } from "../components/ProductForm";
 import {
@@ -41,6 +42,8 @@ export function ProductEditPage() {
   const [values, setValues] = useState<ProductFormValues>(emptyValues);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const isValidId = useMemo(() => Number.isFinite(productId), [productId]);
 
@@ -113,11 +116,22 @@ export function ProductEditPage() {
     navigate("/products");
   }
 
-  async function handleDelete() {
-    const confirmed = window.confirm("Delete this product?");
-    if (!confirmed) return;
-    await deleteAdminProductApi(productId);
-    navigate("/products");
+  function handleDelete() {
+    setDeleteConfirmationOpen(true);
+  }
+
+  async function confirmDelete() {
+    setDeleting(true);
+    setErrorMessage(null);
+    try {
+      await deleteAdminProductApi(productId);
+      navigate("/products");
+    } catch (error) {
+      setErrorMessage(readErrorMessage(error, "Unable to delete product."));
+      setDeleteConfirmationOpen(false);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -137,6 +151,15 @@ export function ProductEditPage() {
         submitLabel="Save Changes"
         showDelete
         onDelete={handleDelete}
+      />
+      <ConfirmationDialog
+        open={deleteConfirmationOpen}
+        title="Delete product?"
+        message="This will permanently remove the product from the catalog. This action cannot be undone."
+        confirmLabel="Delete Product"
+        busy={deleting}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setDeleteConfirmationOpen(false)}
       />
     </section>
   );

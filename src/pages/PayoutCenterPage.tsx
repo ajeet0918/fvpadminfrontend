@@ -16,6 +16,7 @@ import {
   rejectInvestorPayoutApi
 } from "../lib/api";
 import type { InvestorAccount, InvestorMonthlyReturn, InvestorPayout, InvestorPayoutStatus } from "../types/domain";
+import { downloadBlob } from "../lib/downloads";
 
 const payoutStatuses: InvestorPayoutStatus[] = ["PENDING_APPROVAL", "APPROVED", "PAID", "REJECTED", "FAILED"];
 
@@ -85,14 +86,7 @@ export function PayoutCenterPage() {
       setSaving(true);
       setError(null);
       const blob = await downloadInvestorReceiptFileApi(receiptNumber);
-      const fileUrl = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = fileUrl;
-      anchor.download = `${receiptNumber}.pdf`;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(fileUrl);
+      downloadBlob(blob, receiptNumber);
     } catch (err) {
       setError(readErrorMessage(err, "Unable to download receipt."));
     } finally {

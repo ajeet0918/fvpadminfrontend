@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { LeadForm, type LeadFormValues } from "../components/LeadForm";
 import { PageHeader } from "../components/PageHeader";
 import {
@@ -37,6 +38,8 @@ export function LeadEditPage() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const isValidId = useMemo(() => Number.isFinite(leadId), [leadId]);
 
@@ -95,11 +98,22 @@ export function LeadEditPage() {
     }
   }
 
-  async function handleDelete() {
-    const confirmed = window.confirm("Delete this lead?");
-    if (!confirmed) return;
-    await deleteLeadApi(leadId);
-    navigate("/leads");
+  function handleDelete() {
+    setDeleteConfirmationOpen(true);
+  }
+
+  async function confirmDelete() {
+    setDeleting(true);
+    setErrorMessage(null);
+    try {
+      await deleteLeadApi(leadId);
+      navigate("/leads");
+    } catch (error) {
+      setErrorMessage(readErrorMessage(error, "Unable to delete lead."));
+      setDeleteConfirmationOpen(false);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -121,6 +135,15 @@ export function LeadEditPage() {
         submitLabel="Save Changes"
         showDelete
         onDelete={handleDelete}
+      />
+      <ConfirmationDialog
+        open={deleteConfirmationOpen}
+        title="Delete lead?"
+        message="This will permanently remove the lead and its record from the admin workspace."
+        confirmLabel="Delete Lead"
+        busy={deleting}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setDeleteConfirmationOpen(false)}
       />
     </section>
   );

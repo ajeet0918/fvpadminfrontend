@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { downloadInvestorReceiptFileApi, fetchInvestorReceiptsApi, fetchInvestorsApi, readErrorMessage } from "../lib/api";
+import { downloadBlob } from "../lib/downloads";
 import type { InvestorAccount, InvestorReceipt } from "../types/domain";
 
 export function ReceiptCenterPage() {
@@ -33,14 +34,7 @@ export function ReceiptCenterPage() {
   async function handleDownload(receiptNumber: string) {
     try {
       const blob = await downloadInvestorReceiptFileApi(receiptNumber);
-      const fileUrl = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = fileUrl;
-      anchor.download = `${receiptNumber}.pdf`;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(fileUrl);
+      downloadBlob(blob, receiptNumber);
     } catch (err) {
       setError(readErrorMessage(err, "Unable to download receipt."));
     }
