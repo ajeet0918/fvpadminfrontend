@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { API_BASE_URL, uploadProductImageApi } from "../lib/api";
+import { API_BASE_URL, downloadAdminDocumentContentApi, uploadProductImageApi } from "../lib/api";
+import { downloadBlob } from "../lib/downloads";
 import type { Category, ProductStatus } from "../types/domain";
 import { FormSection } from "./FormSection";
 
@@ -66,6 +67,9 @@ export function ProductForm({
   const [values, setValues] = useState<ProductFormValues>(initialValues);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [downloadingImage, setDownloadingImage] = useState(false);
+  const [previewSrc, setPreviewSrc] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -73,13 +77,51 @@ export function ProductForm({
     setErrorMessage(null);
   }, [initialValues]);
 
-  const previewSrc = useMemo(() => {
+  const legacyPreviewSrc = useMemo(() => {
     const url = values.imageUrl.trim();
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
     if (url.startsWith("/")) return `${resolveApiOrigin(API_BASE_URL)}${url}`;
     return url;
   }, [values.imageUrl]);
+
+  const imageReference = values.imageDocumentId.trim() || values.imageUrl.trim();
+
+  useEffect(() => {
+    const documentId = values.imageDocumentId.trim();
+    let active = true;
+    let objectUrl: string | null = null;
+
+    if (!documentId) {
+      setPreviewSrc(legacyPreviewSrc);
+      setPreviewLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setPreviewLoading(true);
+    setPreviewSrc("");
+    void downloadAdminDocumentContentApi(documentId)
+      .then((blob) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setPreviewSrc(objectUrl);
+      })
+      .catch((error) => {
+        if (active) {
+          setErrorMessage(error instanceof Error ? error.message : "Unable to load image preview.");
+        }
+      })
+      .finally(() => {
+        if (active) setPreviewLoading(false);
+      });
+
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [legacyPreviewSrc, values.imageDocumentId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -112,6 +154,21 @@ export function ProductForm({
       setErrorMessage(error instanceof Error ? error.message : "Unable to upload image.");
     } finally {
       setUploadingImage(false);
+    }
+  }
+
+  async function handleDownloadImage() {
+    if (!imageReference) return;
+
+    setDownloadingImage(true);
+    setErrorMessage(null);
+    try {
+      const blob = await downloadAdminDocumentContentApi(imageReference);
+      downloadBlob(blob, values.imageOriginalFileName || "product-image");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to download image.");
+    } finally {
+      setDownloadingImage(false);
     }
   }
 
@@ -261,23 +318,14 @@ export function ProductForm({
         </FormSection>
 
         <FormSection title="Image">
-          <div className="form-grid-2">
-            <label>
-              Image URL
-              <input
-                value={values.imageUrl}
-                onChange={(event) => setValues((current) => ({
-                  ...current,
-                  imageDocumentId: "",
-                  imageUrl: event.target.value,
-                  imageOriginalFileName: "",
-                  imageContentType: "",
-                  imageSizeBytes: ""
-                }))}
-                placeholder="https://example.com/image.jpg"
-              />
-            </label>
-            <div className="grid gap-2">
+          <div className="grid gap-3">
+            <div className="grid gap-1">
+              <strong className="text-sm text-text-primary">Product image</strong>
+              <span className="table-muted">
+                {values.imageOriginalFileName || (values.imageDocumentId ? "Uploaded image" : "No image selected")}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
               <label className="button-link button-link-secondary w-fit cursor-pointer">
                 Select Local Image
                 <input
@@ -290,12 +338,31 @@ export function ProductForm({
                   }}
                 />
               </label>
-              {uploadingImage ? <p className="table-muted">Uploading image...</p> : null}
+              {imageReference ? (
+                <button
+                  type="button"
+                  className="button-link button-link-secondary"
+                  onClick={() => void handleDownloadImage()}
+                  disabled={downloadingImage}
+                >
+                  {downloadingImage ? "Downloading..." : "Download Image"}
+                </button>
+              ) : null}
+              {uploadingImage ? <span className="table-muted">Uploading image...</span> : null}
             </div>
           </div>
+          {previewLoading ? <p className="table-muted mt-3">Loading image preview...</p> : null}
           {previewSrc ? (
             <div className="image-preview-wrap mt-3">
-              <img src={previewSrc} alt="Product preview" className="image-preview" />
+              <img
+                src={previewSrc}
+                alt="Product preview"
+                className="image-preview"
+                onError={() => {
+                  setPreviewSrc("");
+                  setErrorMessage("Unable to display image preview.");
+                }}
+              />
             </div>
           ) : null}
         </FormSection>
