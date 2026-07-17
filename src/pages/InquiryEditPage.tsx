@@ -13,6 +13,7 @@ import {
   updateInquiryApi
 } from "../lib/api";
 import { getCurrentRole, getCurrentUsername } from "../lib/auth";
+import { downloadBlob } from "../lib/downloads";
 import type { Inquiry, OwnerOption } from "../types/domain";
 
 const emptyValues: InquiryFormValues = {
@@ -337,51 +338,42 @@ function InfoItem({ label, value }: { label: string; value: string | number | nu
 }
 
 function DocumentLink({ label, documentId, path }: { label: string; documentId: string | null; path: string | null }) {
-  const [opening, setOpening] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const documentReference = documentId ?? path;
 
   if (!documentReference) {
     return null;
   }
 
-  async function handleOpen() {
+  async function handleDownload() {
     if (!documentReference) {
       return;
     }
 
     try {
-      setOpening(true);
-      if (/^https?:\/\//i.test(documentReference)) {
-        window.open(documentReference, "_blank", "noopener,noreferrer");
-        return;
-      }
-
-      const previewWindow = window.open("about:blank", "_blank");
-      if (!previewWindow) {
-        throw new Error("Browser blocked document preview.");
-      }
-      previewWindow.opener = null;
-      previewWindow.document.write("Loading document preview...");
-
+      setDownloading(true);
+      setDownloadError(null);
       const blob = await downloadAdminDocumentContentApi(documentReference);
-      const objectUrl = URL.createObjectURL(blob);
-      previewWindow.location.href = objectUrl;
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      downloadBlob(blob, label.toLowerCase().replace(/\s+/g, "-"));
     } catch (error) {
-      alert(readErrorMessage(error, `Unable to open ${label}.`));
+      setDownloadError(readErrorMessage(error, `Unable to download ${label}.`));
     } finally {
-      setOpening(false);
+      setDownloading(false);
     }
   }
 
   return (
-    <button
-      type="button"
-      className="button-link button-small button-link-secondary"
-      onClick={handleOpen}
-      disabled={opening}
-    >
-      {opening ? "Opening..." : `View ${label}`}
-    </button>
+    <>
+      <button
+        type="button"
+        className="button-link button-small button-link-secondary"
+        onClick={() => void handleDownload()}
+        disabled={downloading}
+      >
+        {downloading ? "Downloading..." : `Download ${label}`}
+      </button>
+      {downloadError ? <span className="table-muted" role="status">{downloadError}</span> : null}
+    </>
   );
 }
