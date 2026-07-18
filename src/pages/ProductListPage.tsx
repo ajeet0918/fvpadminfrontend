@@ -2,13 +2,23 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { StatusBadge } from "../components/StatusBadge";
 import {
   fetchAdminProductsWithFiltersApi,
   fetchCategoriesApi,
   readErrorMessage
 } from "../lib/api";
+import { formatEnumLabel } from "../lib/formatters";
 import type { AdminProduct, Category } from "../types/domain";
+
+function formatPrice(price: number, priceUnit: string) {
+  const formattedPrice = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR"
+  }).format(price);
+  return `${formattedPrice} / ${priceUnit}`;
+}
 
 export function ProductListPage() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
@@ -56,8 +66,8 @@ export function ProductListPage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="Product List"
-        subtitle="Manage product records with compact, production-ready controls."
+        title="Products"
+        subtitle="Maintain catalog pricing, availability, categories, and storefront visibility."
         actions={<Link className="button-link" to="/products/new">Create Product</Link>}
       />
 
@@ -74,8 +84,8 @@ export function ProductListPage() {
           Status
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "" | "ACTIVE" | "INACTIVE")}>
             <option value="">All Statuses</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
           </select>
         </label>
         <label>
@@ -89,8 +99,8 @@ export function ProductListPage() {
         </label>
       </div>
 
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      {loading ? <p>Loading products...</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {loading ? <LoadingState label="Loading products..." /> : null}
 
       {!loading ? (
         <DataTable isEmpty={filteredProducts.length === 0} emptyText="No products found.">
@@ -104,6 +114,7 @@ export function ProductListPage() {
               <th>Discount %</th>
               <th>Status</th>
               <th>Category</th>
+              <th className="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -117,18 +128,22 @@ export function ProductListPage() {
                 <td>{product.name}</td>
                 <td>{product.sku}</td>
                 <td>
-                  {product.price === null ? "0.00" : product.price.toFixed(2)}
-                  {` / ${product.priceUnit}`}
+                  {product.price === null ? "Price not set" : formatPrice(product.price, product.priceUnit)}
                 </td>
                 <td>{product.defaultTaxRate ?? 0}</td>
                 <td>{product.defaultDiscountRate ?? 0}</td>
                 <td>
                   <StatusBadge
-                    label={product.status}
+                    label={formatEnumLabel(product.status)}
                     tone={product.status === "ACTIVE" ? "success" : "warning"}
                   />
                 </td>
                 <td>{product.categoryName}</td>
+                <td className="actions-cell">
+                  <Link className="button-link button-link-secondary button-small" to={`/products/${product.id}/edit`}>
+                    Edit
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>

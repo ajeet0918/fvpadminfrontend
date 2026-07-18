@@ -1,21 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import {
   fetchOrderApi,
   quoteOrderApi,
   readErrorMessage,
   updateOrderStatusApi
 } from "../lib/api";
+import { formatEnumLabel } from "../lib/formatters";
 import type { Order, OrderStatus } from "../types/domain";
 
 function formatCurrency(value: number | null, currency = "INR") {
   if (value === null || Number.isNaN(value)) return "Pending";
   return new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(value);
-}
-
-function formatStatusLabel(status: Order["status"]) {
-  return status.split("_").join(" ");
 }
 
 export function OrderDetailPage() {
@@ -113,20 +111,20 @@ export function OrderDetailPage() {
     }
   }
 
-  if (loading) return <p>Loading order...</p>;
-  if (!order) return <p>Order not found.</p>;
+  if (loading) return <LoadingState label="Loading order..." />;
+  if (!order) return <ErrorBanner message="Order not found." />;
 
   return (
     <section className="admin-page">
       <PageHeader
         title={`Order ${order.orderNumber}`}
-        subtitle="Review product-based pricing and update fulfillment status without layout shifts."
+        subtitle="Review pricing, customer details, and fulfilment progress for this order."
         actions={<Link className="button-link button-link-secondary button-small" to="/orders">Back To Orders</Link>}
       />
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
 
       <div className="order-summary-grid">
-        <div><span>Status</span><strong>{formatStatusLabel(order.status)}</strong></div>
+        <div><span>Status</span><strong>{formatEnumLabel(order.status)}</strong></div>
         <div><span>Company</span><strong>{order.companyName}</strong></div>
         <div><span>Total</span><strong>{formatCurrency(order.totalAmount, order.currency)}</strong></div>
       </div>
@@ -221,7 +219,7 @@ export function OrderDetailPage() {
         <div className="status-actions">
           {(["CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] as OrderStatus[]).map((status) => (
             <button key={status} type="button" className="button-link button-link-secondary button-small" onClick={() => void updateStatus(status)} disabled={actionLoading}>
-              {formatStatusLabel(status)}
+              {formatEnumLabel(status)}
             </button>
           ))}
         </div>

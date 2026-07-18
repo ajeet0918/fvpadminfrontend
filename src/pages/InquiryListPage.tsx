@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { StatusBadge } from "../components/StatusBadge";
 import { fetchInquiriesApi, readErrorMessage } from "../lib/api";
+import { formatEnumLabel } from "../lib/formatters";
 import type { Inquiry, InquiryStatus, InquiryType } from "../types/domain";
 
 const statusOptions: Array<InquiryStatus | ""> = [
@@ -65,7 +67,7 @@ export function InquiryListPage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="Inquiry List"
+        title="Inquiries"
         subtitle="Review website inquiries, assign owners, and convert qualified records to leads."
         actions={<Link className="button-link" to="/inquiries/new">Create Inquiry</Link>}
       />
@@ -76,7 +78,7 @@ export function InquiryListPage() {
           <input
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="name, company, email, product"
+            placeholder="Name, company, email, or product"
           />
         </label>
         <label>
@@ -84,7 +86,7 @@ export function InquiryListPage() {
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as InquiryStatus | "")}>
             <option value="">All Statuses</option>
             {statusOptions.filter(Boolean).map((status) => (
-              <option key={status} value={status}>{status}</option>
+              <option key={status} value={status}>{formatEnumLabel(status)}</option>
             ))}
           </select>
         </label>
@@ -96,7 +98,7 @@ export function InquiryListPage() {
           >
             <option value="">All Types</option>
             {inquiryTypeOptions.filter(Boolean).map((type) => (
-              <option key={type} value={type}>{type}</option>
+              <option key={type} value={type}>{formatEnumLabel(type)}</option>
             ))}
           </select>
         </label>
@@ -105,7 +107,7 @@ export function InquiryListPage() {
           <input
             value={sourceFilter}
             onChange={(event) => setSourceFilter(event.target.value)}
-            placeholder="WEBSITE_INQUIRY"
+            placeholder="Source name"
           />
         </label>
         <label>
@@ -113,13 +115,13 @@ export function InquiryListPage() {
           <input
             value={assignedToFilter}
             onChange={(event) => setAssignedToFilter(event.target.value)}
-            placeholder="owner"
+            placeholder="Owner username"
           />
         </label>
       </div>
 
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      {loading ? <p>Loading inquiries...</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {loading ? <LoadingState label="Loading inquiries..." /> : null}
 
       {!loading ? (
         <DataTable isEmpty={list.length === 0} emptyText="No inquiries found.">
@@ -133,6 +135,7 @@ export function InquiryListPage() {
               <th>Payment</th>
               <th>Assigned</th>
               <th>Updated</th>
+              <th className="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -143,15 +146,20 @@ export function InquiryListPage() {
                     {inquiry.referenceId ?? `INQ-${inquiry.id}`}
                   </Link>
                 </td>
-                <td>{inquiry.inquiryType}</td>
+                <td>{formatEnumLabel(inquiry.inquiryType)}</td>
                 <td>{inquiry.fullName}</td>
                 <td>
-                  <StatusBadge label={inquiry.status} tone={inquiryTone(inquiry.status)} />
+                  <StatusBadge label={formatEnumLabel(inquiry.status)} tone={inquiryTone(inquiry.status)} />
                 </td>
-                <td>{inquiry.verificationStatus}</td>
-                <td>{inquiry.paymentStatus}</td>
+                <td>{formatEnumLabel(inquiry.verificationStatus)}</td>
+                <td>{formatEnumLabel(inquiry.paymentStatus)}</td>
                 <td>{inquiry.assignedTo ?? "-"}</td>
                 <td>{formatDate(inquiry.updatedAt)}</td>
+                <td className="actions-cell">
+                  <Link className="button-link button-link-secondary button-small" to={`/inquiries/${inquiry.id}/edit`}>
+                    Review
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>

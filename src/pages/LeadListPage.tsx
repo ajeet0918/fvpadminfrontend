@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { StatusBadge } from "../components/StatusBadge";
 import { fetchLeadsApi, readErrorMessage } from "../lib/api";
+import { formatEnumLabel } from "../lib/formatters";
 import type { Lead, LeadStatus } from "../types/domain";
 
 const statusOptions: Array<LeadStatus | ""> = [
@@ -62,8 +64,8 @@ export function LeadListPage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="Lead List"
-        subtitle="Track pipeline-ready contacts from website and inquiry conversions."
+        title="Leads"
+        subtitle="Track qualified contacts, ownership, source, and progress through the sales pipeline."
         actions={<Link className="button-link" to="/leads/new">Create Lead</Link>}
       />
 
@@ -73,7 +75,7 @@ export function LeadListPage() {
           <input
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="name, email, phone, company"
+            placeholder="Name, email, phone, or company"
           />
         </label>
         <label>
@@ -81,7 +83,7 @@ export function LeadListPage() {
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as LeadStatus | "")}>
             <option value="">All Statuses</option>
             {statusOptions.filter(Boolean).map((status) => (
-              <option key={status} value={status}>{status}</option>
+              <option key={status} value={status}>{formatEnumLabel(status)}</option>
             ))}
           </select>
         </label>
@@ -90,7 +92,7 @@ export function LeadListPage() {
           <input
             value={sourceFilter}
             onChange={(event) => setSourceFilter(event.target.value)}
-            placeholder="WEBSITE_CONTACT"
+            placeholder="Source name"
           />
         </label>
         <label>
@@ -98,13 +100,13 @@ export function LeadListPage() {
           <input
             value={assignedToFilter}
             onChange={(event) => setAssignedToFilter(event.target.value)}
-            placeholder="owner"
+            placeholder="Owner username"
           />
         </label>
       </div>
 
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      {loading ? <p>Loading leads...</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {loading ? <LoadingState label="Loading leads..." /> : null}
 
       {!loading ? (
         <DataTable isEmpty={list.length === 0} emptyText="No leads found.">
@@ -118,6 +120,7 @@ export function LeadListPage() {
               <th>Source</th>
               <th>Assigned</th>
               <th>Updated</th>
+              <th className="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -132,11 +135,16 @@ export function LeadListPage() {
                 <td>{lead.companyName ?? "-"}</td>
                 <td>{lead.phone}</td>
                 <td>
-                  <StatusBadge label={lead.status} tone={leadTone(lead.status)} />
+                  <StatusBadge label={formatEnumLabel(lead.status)} tone={leadTone(lead.status)} />
                 </td>
-                <td>{lead.source}</td>
+                <td>{formatEnumLabel(lead.source)}</td>
                 <td>{lead.assignedTo ?? "-"}</td>
                 <td>{formatDate(lead.updatedAt)}</td>
+                <td className="actions-cell">
+                  <Link className="button-link button-link-secondary button-small" to={`/leads/${lead.id}/edit`}>
+                    Review
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>

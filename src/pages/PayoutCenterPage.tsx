@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionDropdown } from "../components/ActionDropdown";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { StatusBadge } from "../components/StatusBadge";
 import {
   approveInvestorPayoutApi,
@@ -155,8 +156,8 @@ export function PayoutCenterPage() {
         </article>
       ) : null}
 
-      {error ? <p className="error-text">{error}</p> : null}
-      {loading ? <p>Loading payout data...</p> : null}
+      {error ? <ErrorBanner message={error} /> : null}
+      {loading ? <LoadingState label="Loading payout data..." /> : null}
 
       {!loading ? (
         <DataTable isEmpty={payouts.length === 0} emptyText="No payouts found.">

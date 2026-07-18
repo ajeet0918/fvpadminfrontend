@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { fetchOrdersApi, readErrorMessage } from "../lib/api";
+import { formatEnumLabel } from "../lib/formatters";
 import type { Order } from "../types/domain";
-
-function formatStatusLabel(status: Order["status"]) {
-  return status.split("_").join(" ");
-}
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
@@ -86,8 +84,8 @@ export function QuotesPage() {
         </label>
       </div>
 
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      {loading ? <p>Loading quote queue...</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {loading ? <LoadingState label="Loading quote queue..." /> : null}
 
       {!loading ? (
         <div className="data-table-wrap">
@@ -107,7 +105,7 @@ export function QuotesPage() {
                 <tr key={order.id}>
                   <td>{order.orderNumber}</td>
                   <td>{order.companyName}</td>
-                  <td><span className="status-pill">{formatStatusLabel(order.status)}</span></td>
+                  <td><span className="status-pill">{formatEnumLabel(order.status)}</span></td>
                   <td>{order.quoteReference ?? "Not created"}</td>
                   <td>{formatDate(order.quotedAt ?? order.createdAt)}</td>
                   <td>

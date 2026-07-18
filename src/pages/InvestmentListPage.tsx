@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import {
   createInvestmentApi,
   fetchInvestmentsApi,
@@ -179,8 +180,8 @@ export function InvestmentListPage() {
         </form>
       </article>
 
-      {error ? <p className="error-text">{error}</p> : null}
-      {loading ? <p>Loading investments...</p> : null}
+      {error ? <ErrorBanner message={error} /> : null}
+      {loading ? <LoadingState label="Loading investments..." /> : null}
       {!loading ? (
         <div className="data-table-wrap">
           <table className="data-table">

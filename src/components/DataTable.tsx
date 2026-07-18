@@ -10,8 +10,14 @@ type DataTableProps = {
 export function DataTable({ children, isEmpty = false, emptyText = "No records found.", className }: DataTableProps) {
   return (
     <div className={`data-table-wrap ${className ?? ""}`.trim()}>
-      <table className="data-table">{children}</table>
-      {isEmpty ? <p className="empty-state">{emptyText}</p> : null}
+      {isEmpty ? (
+        <div className="empty-state">
+          <strong>No records to display</strong>
+          <span>{emptyText}</span>
+        </div>
+      ) : (
+        <table className="data-table">{children}</table>
+      )}
     </div>
   );
 }
