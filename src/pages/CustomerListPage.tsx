@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { StatusBadge } from "../components/StatusBadge";
 import { fetchAdminCustomersWithFiltersApi, readErrorMessage } from "../lib/api";
+import { formatEnumLabel } from "../lib/formatters";
 import type { AdminCustomer } from "../types/domain";
 
 function formatDate(value: string | null) {
@@ -45,7 +47,7 @@ export function CustomerListPage() {
     <section className="admin-page">
       <PageHeader
         title="Customers"
-        subtitle="View and update customer profiles linked to order activity."
+        subtitle="Review customer profiles, contact details, order activity, and account status."
       />
 
       <div className="filter-grid">
@@ -61,14 +63,14 @@ export function CustomerListPage() {
           Status
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "" | "ACTIVE" | "INACTIVE")}>
             <option value="">All Statuses</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
           </select>
         </label>
       </div>
 
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      {loading ? <p>Loading customers...</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {loading ? <LoadingState label="Loading customers..." /> : null}
 
       {!loading ? (
         <DataTable isEmpty={visibleCustomers.length === 0} emptyText="No customers found.">
@@ -83,6 +85,7 @@ export function CustomerListPage() {
               <th>Last Order</th>
               <th>Status</th>
               <th>Updated</th>
+              <th className="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -107,11 +110,16 @@ export function CustomerListPage() {
                 </td>
                 <td>
                   <StatusBadge
-                    label={customer.status}
+                    label={formatEnumLabel(customer.status)}
                     tone={customer.active ? "success" : "warning"}
                   />
                 </td>
                 <td>{formatDate(customer.updatedAt)}</td>
+                <td className="actions-cell">
+                  <Link className="button-link button-link-secondary button-small" to={`/customers/${customer.id}/edit`}>
+                    View
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>

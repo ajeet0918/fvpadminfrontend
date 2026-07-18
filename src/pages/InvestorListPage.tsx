@@ -1,6 +1,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { StatusBadge } from "../components/StatusBadge";
 import {
   createInvestorProfileApi,
@@ -405,9 +406,9 @@ export function InvestorListPage() {
         actions={<button type="button" className="button-link" onClick={openCreatePage}>Create Investor Profile</button>}
       />
 
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
       {successMessage ? <p className="success-text">{successMessage}</p> : null}
-      {loading ? <p>Loading investor data...</p> : null}
+      {loading ? <LoadingState label="Loading investor data..." /> : null}
 
       <div className="kpi-grid quote-kpi-grid">
         <article className="kpi-card">

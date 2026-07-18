@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import MenuOpenRoundedIcon from "@mui/icons-material/MenuOpenRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
@@ -14,20 +15,46 @@ import ManageSearchRoundedIcon from "@mui/icons-material/ManageSearchRounded";
 import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import { clearAccessToken } from "../lib/auth";
 
-const navItems = [
-  { label: "Dashboard", path: "/dashboard", icon: DashboardRoundedIcon },
-  { label: "Orders", path: "/orders", icon: ShoppingCartRoundedIcon },
-  { label: "Customers", path: "/customers", icon: PeopleAltRoundedIcon },
-  { label: "Investors & Investments", path: "/investors", icon: AccountBalanceWalletRoundedIcon },
-  { label: "Monthly Returns", path: "/monthly-returns", icon: TrendingUpRoundedIcon },
-  { label: "Payouts & Receipts", path: "/payouts", icon: ReceiptLongRoundedIcon },
-  { label: "Products", path: "/products", icon: Inventory2RoundedIcon },
-  { label: "Leads", path: "/leads", icon: CampaignRoundedIcon },
-  { label: "Inquiries", path: "/inquiries", icon: ManageSearchRoundedIcon },
-  { label: "Users", path: "/users", icon: AdminPanelSettingsRoundedIcon },
-  { label: "Settings", path: "/settings", icon: SettingsRoundedIcon }
+const navSections = [
+  {
+    label: "Overview",
+    items: [
+      { label: "Dashboard", path: "/dashboard", icon: DashboardRoundedIcon }
+    ]
+  },
+  {
+    label: "Commerce",
+    items: [
+      { label: "Orders", path: "/orders", icon: ShoppingCartRoundedIcon },
+      { label: "Products", path: "/products", icon: Inventory2RoundedIcon },
+      { label: "Customers", path: "/customers", icon: PeopleAltRoundedIcon }
+    ]
+  },
+  {
+    label: "Relationships",
+    items: [
+      { label: "Leads", path: "/leads", icon: CampaignRoundedIcon },
+      { label: "Inquiries", path: "/inquiries", icon: ManageSearchRoundedIcon },
+      { label: "Investors", path: "/investors", icon: AccountBalanceWalletRoundedIcon }
+    ]
+  },
+  {
+    label: "Finance",
+    items: [
+      { label: "Monthly Returns", path: "/monthly-returns", icon: TrendingUpRoundedIcon },
+      { label: "Payouts & Receipts", path: "/payouts", icon: ReceiptLongRoundedIcon }
+    ]
+  },
+  {
+    label: "Administration",
+    items: [
+      { label: "Users", path: "/users", icon: AdminPanelSettingsRoundedIcon },
+      { label: "Settings", path: "/settings", icon: SettingsRoundedIcon }
+    ]
+  }
 ];
 
 export function AdminLayout() {
@@ -57,20 +84,20 @@ export function AdminLayout() {
       ) : null}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-[#14532d] bg-brand text-green-50 transition-[transform,width] duration-300 ease-in-out lg:static lg:translate-x-0 ${
+        className={`admin-sidebar fixed inset-y-0 left-0 z-40 w-64 transition-[transform,width] duration-300 ease-in-out lg:static lg:translate-x-0 ${
           sidebarCollapsed ? "lg:w-20" : "lg:w-64"
         } ${
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex h-full flex-col">
-          <div className={`border-b border-white/20 py-3 ${sidebarCollapsed ? "px-2" : "px-3"}`}>
+          <div className={`border-b border-white/10 py-3 ${sidebarCollapsed ? "px-2" : "px-3"}`}>
             <div className="flex h-12 items-center justify-between">
               <div className={`flex min-w-0 items-center ${sidebarCollapsed ? "gap-0" : "gap-3"}`}>
                 <img
                   src="/assets/logofvp.jpeg"
                   alt="FVP Purepick"
-                  className={`shrink-0 rounded-lg border border-white/30 object-cover ${sidebarCollapsed ? "h-8 w-8" : "h-10 w-10"}`}
+                  className={`shrink-0 rounded-md border border-white/20 object-cover ${sidebarCollapsed ? "h-8 w-8" : "h-10 w-10"}`}
                 />
                 <div
                   className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
@@ -78,56 +105,68 @@ export function AdminLayout() {
                   }`}
                 >
                   <p className="m-0 text-base font-semibold text-white">FVP Purepick</p>
-                  <p className="m-0 text-xs text-green-100/90">Operations Console</p>
+                  <p className="m-0 text-xs text-white/60">Operations workspace</p>
                 </div>
               </div>
               <button
                 type="button"
-                className="hidden shrink-0 rounded-md p-1 text-green-100 hover:bg-white/10 lg:inline-flex"
+                className="hidden shrink-0 rounded-md p-1.5 text-white/70 hover:bg-white/10 hover:text-white lg:inline-flex"
                 aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 onClick={() => setSidebarCollapsed((prev) => !prev)}
               >
                 {sidebarCollapsed ? <MenuRoundedIcon fontSize="small" /> : <MenuOpenRoundedIcon fontSize="small" />}
               </button>
+              <button
+                type="button"
+                className="inline-flex shrink-0 rounded-md p-1.5 text-white/70 hover:bg-white/10 hover:text-white lg:hidden"
+                aria-label="Close navigation"
+                onClick={() => setMobileSidebarOpen(false)}
+              >
+                <CloseRoundedIcon fontSize="small" />
+              </button>
             </div>
           </div>
 
-          <nav className="flex-1 overflow-auto p-2">
-            {navItems.map((item) => {
-              const active = isActiveRoute(location.pathname, item.path);
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.path}
-                  type="button"
-                  className={`mb-1 flex h-10 w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
-                    sidebarCollapsed ? "justify-center" : "justify-start gap-3"
-                  } ${
-                    active
-                      ? "bg-white text-brand shadow-sm"
-                      : "text-green-50 hover:bg-white/10"
-                  }`}
-                  title={item.label}
-                  onClick={() => navigate(item.path)}
-                >
-                  <Icon fontSize="small" />
-                  <span
-                    className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
-                      sidebarCollapsed ? "max-w-0 opacity-0" : "max-w-[170px] opacity-100"
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
+          <nav className="flex-1 overflow-auto px-2 py-3" aria-label="Admin navigation">
+            {navSections.map((section) => (
+              <div key={section.label} className="mb-4">
+                <p className={`admin-nav-section-label ${sidebarCollapsed ? "lg:hidden" : ""}`}>
+                  {section.label}
+                </p>
+                {section.items.map((item) => {
+                  const active = isActiveRoute(location.pathname, item.path);
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.path}
+                      type="button"
+                      aria-current={active ? "page" : undefined}
+                      className={`admin-nav-item ${active ? "active" : ""} ${
+                        sidebarCollapsed ? "lg:justify-center lg:px-2" : ""
+                      }`}
+                      title={item.label}
+                      onClick={() => navigate(item.path)}
+                    >
+                      <Icon fontSize="small" />
+                      <span
+                        className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
+                          sidebarCollapsed ? "lg:max-w-0 lg:opacity-0" : "max-w-[170px] opacity-100"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
 
-          <div className="border-t border-white/20 p-3">
+          <div className="border-t border-white/10 p-3">
             <button
               type="button"
-              className={`button-link bg-white text-brand hover:bg-green-50 ${
-                sidebarCollapsed ? "w-full px-2" : "w-full justify-center"
+              className={`admin-logout-button ${
+                sidebarCollapsed ? "lg:justify-center lg:px-2" : ""
               }`}
               onClick={logout}
               title="Logout"
@@ -148,8 +187,8 @@ export function AdminLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur">
-          <div className="flex min-h-[56px] items-center justify-between gap-3 px-4 md:px-6">
+        <header className="admin-topbar">
+          <div className="flex min-h-[60px] items-center justify-between gap-3 px-4 md:px-6">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -159,8 +198,22 @@ export function AdminLayout() {
               >
                 <MenuRoundedIcon fontSize="small" />
               </button>
-              <h1 className="m-0 text-lg font-semibold text-text-primary">{resolvePageTitle(location.pathname)}</h1>
+              <div className="admin-workspace-label">
+                <span>FVP Purepick</span>
+                <strong>Operations workspace</strong>
+              </div>
             </div>
+            <a
+              className="button-link button-link-secondary button-small"
+              href="https://www.fvppurepick.com/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                View website
+                <OpenInNewRoundedIcon fontSize="inherit" />
+              </span>
+            </a>
           </div>
         </header>
 
@@ -179,29 +232,4 @@ function isActiveRoute(current: string, navPath: string) {
     return current === "/dashboard" || current === "/";
   }
   return current === navPath || current.startsWith(`${navPath}/`);
-}
-
-function resolvePageTitle(pathname: string) {
-  if (pathname === "/dashboard") return "Dashboard";
-  if (pathname === "/orders") return "Order Search";
-  if (pathname.startsWith("/orders/")) return "Edit Order";
-  if (pathname === "/customers") return "Customer Search";
-  if (pathname.startsWith("/customers/")) return "Edit Customer";
-  if (pathname === "/investors") return "Investor Search";
-  if (pathname === "/monthly-returns") return "Monthly Return Search";
-  if (pathname === "/payouts") return "Payout Search";
-  if (pathname === "/products") return "Product Search";
-  if (pathname === "/products/new") return "Create Product";
-  if (pathname.startsWith("/products/")) return "Edit Product";
-  if (pathname === "/leads") return "Lead Search";
-  if (pathname === "/leads/new") return "Create Lead";
-  if (pathname.startsWith("/leads/")) return "Edit Lead";
-  if (pathname === "/inquiries") return "Inquiry Search";
-  if (pathname === "/inquiries/new") return "Create Inquiry";
-  if (pathname.startsWith("/inquiries/")) return "Edit Inquiry";
-  if (pathname === "/users") return "User Search";
-  if (pathname === "/users/new") return "Create User";
-  if (pathname.startsWith("/users/")) return "Edit User";
-  if (pathname === "/settings") return "Settings";
-  return "Admin";
 }

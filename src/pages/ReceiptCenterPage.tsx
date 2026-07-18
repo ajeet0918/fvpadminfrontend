@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { downloadInvestorReceiptFileApi, fetchInvestorReceiptsApi, fetchInvestorsApi, readErrorMessage } from "../lib/api";
 import { downloadBlob } from "../lib/downloads";
 import type { InvestorAccount, InvestorReceipt } from "../types/domain";
@@ -54,8 +55,8 @@ export function ReceiptCenterPage() {
         </label>
       </div>
 
-      {error ? <p className="error-text">{error}</p> : null}
-      {loading ? <p>Loading receipts...</p> : null}
+      {error ? <ErrorBanner message={error} /> : null}
+      {loading ? <LoadingState label="Loading receipts..." /> : null}
 
       {!loading ? (
         <DataTable isEmpty={items.length === 0} emptyText="No receipts available.">

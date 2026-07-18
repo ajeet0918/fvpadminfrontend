@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { createInvestmentApi, fetchInvestorsApi, readErrorMessage } from "../lib/api";
 import type { InvestmentStatus, InvestorAccount } from "../types/domain";
 
@@ -61,8 +62,8 @@ export function InvestmentCreatePage() {
   return (
     <section className="admin-page">
       <PageHeader title="Create Investment" subtitle="Create a new investment entry for an investor account." />
-      {error ? <p className="error-text">{error}</p> : null}
-      {loading ? <p>Loading investors...</p> : null}
+      {error ? <ErrorBanner message={error} /> : null}
+      {loading ? <LoadingState label="Loading investors..." /> : null}
 
       {!loading ? (
         <article className="admin-form-card">

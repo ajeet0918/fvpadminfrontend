@@ -25,7 +25,7 @@ export const adminTheme = createTheme({
     }
   },
   shape: {
-    borderRadius: 12
+    borderRadius: 8
   },
   typography: {
     fontFamily: "Inter, Manrope, Segoe UI, sans-serif",

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { fetchInvestorApi, readErrorMessage, updateInvestorApi } from "../lib/api";
 import type { InvestorAccountStatus, VerificationStatus } from "../types/domain";
 
@@ -75,8 +76,8 @@ export function InvestorEditPage() {
   return (
     <section className="admin-page">
       <PageHeader title="Investor Edit" subtitle="Update investor profile and verification lifecycle." />
-      {error ? <p className="error-text">{error}</p> : null}
-      {loading ? <p>Loading investor...</p> : null}
+      {error ? <ErrorBanner message={error} /> : null}
+      {loading ? <LoadingState label="Loading investor..." /> : null}
 
       {!loading ? (
         <article className="admin-form-card">

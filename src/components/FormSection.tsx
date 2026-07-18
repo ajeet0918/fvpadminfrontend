@@ -10,7 +10,7 @@ type FormSectionProps = {
 
 export function FormSection({ title, subtitle, actions, children, className }: FormSectionProps) {
   return (
-    <section className={`rounded-xl border border-border bg-gray-50 p-4 ${className ?? ""}`.trim()}>
+    <section className={`form-section ${className ?? ""}`.trim()}>
       {(title || subtitle || actions) ? (
         <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
           <div>

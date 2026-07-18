@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { StatusBadge } from "../components/StatusBadge";
 import { fetchAdminRolesApi, fetchAdminUsersWithFiltersApi, readErrorMessage } from "../lib/api";
+import { formatEnumLabel } from "../lib/formatters";
 import type { AdminRole, AdminUser } from "../types/domain";
 
 function formatDate(value: string) {
@@ -56,8 +58,8 @@ export function UserListPage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="User List"
-        subtitle="Manage user access with compact list, clear status, and role visibility."
+        title="Users"
+        subtitle="Manage operations access, assigned roles, and account status."
         actions={<Link className="button-link" to="/users/new">Create User</Link>}
       />
 
@@ -74,8 +76,8 @@ export function UserListPage() {
           Status
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "" | "ACTIVE" | "INACTIVE")}>
             <option value="">All Statuses</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
           </select>
         </label>
         <label>
@@ -89,8 +91,8 @@ export function UserListPage() {
         </label>
       </div>
 
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      {loading ? <p>Loading users...</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {loading ? <LoadingState label="Loading users..." /> : null}
 
       {!loading ? (
         <DataTable isEmpty={filteredUsers.length === 0} emptyText="No users found.">
@@ -103,6 +105,7 @@ export function UserListPage() {
               <th>Role</th>
               <th>Status</th>
               <th>Created</th>
+              <th className="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -119,11 +122,16 @@ export function UserListPage() {
                 <td>{user.roleCode}</td>
                 <td>
                   <StatusBadge
-                    label={user.status}
+                    label={formatEnumLabel(user.status)}
                     tone={user.active ? "success" : "warning"}
                   />
                 </td>
                 <td>{formatDate(user.createdAt)}</td>
+                <td className="actions-cell">
+                  <Link className="button-link button-link-secondary button-small" to={`/users/${user.id}/edit`}>
+                    Edit
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>

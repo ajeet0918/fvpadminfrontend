@@ -19,8 +19,8 @@ export default {
         card: "0 1px 2px rgba(17, 24, 39, 0.06), 0 8px 16px rgba(17, 24, 39, 0.04)"
       },
       borderRadius: {
-        lg: "12px",
-        xl: "16px"
+        lg: "8px",
+        xl: "8px"
       }
     },
   },

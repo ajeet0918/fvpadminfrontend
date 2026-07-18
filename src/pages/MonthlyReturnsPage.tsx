@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionDropdown } from "../components/ActionDropdown";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import {
   approveMonthlyReturnApi,
   fetchInvestmentsApi,
@@ -289,8 +290,8 @@ export function MonthlyReturnsPage() {
         </div>
       </div>
 
-      {error ? <p className="error-text">{error}</p> : null}
-      {loading ? <p>Loading monthly returns...</p> : null}
+      {error ? <ErrorBanner message={error} /> : null}
+      {loading ? <LoadingState label="Loading monthly returns..." /> : null}
 
       {!loading ? (
         <DataTable isEmpty={items.length === 0} emptyText="No return entries found for selected filters.">

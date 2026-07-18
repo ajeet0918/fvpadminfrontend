@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { StatusBadge } from "../components/StatusBadge";
 import { fetchOrdersApi, readErrorMessage } from "../lib/api";
+import { formatEnumLabel } from "../lib/formatters";
 import type { Order } from "../types/domain";
 
 const statusOptions: Array<Order["status"] | "ALL"> = [
   "ALL",
   "PENDING_REVIEW",
+  "QUOTED",
   "CONFIRMED",
   "PROCESSING",
   "SHIPPED",
@@ -16,12 +19,15 @@ const statusOptions: Array<Order["status"] | "ALL"> = [
   "CANCELLED"
 ];
 
-function formatStatusLabel(status: Order["status"]) {
-  return status.split("_").join(" ");
-}
-
 function formatDate(value: string) {
   return new Date(value).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function formatMoney(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency
+  }).format(amount);
 }
 
 export function OrdersPage() {
@@ -31,20 +37,21 @@ export function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<(typeof statusOptions)[number]>("ALL");
 
-  useEffect(() => {
-    async function loadOrders() {
-      try {
-        setLoading(true);
-        setOrders(await fetchOrdersApi());
-      } catch (error) {
-        setErrorMessage(readErrorMessage(error, "Unable to load orders."));
-      } finally {
-        setLoading(false);
-      }
+  const loadOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      setOrders(await fetchOrdersApi());
+    } catch (error) {
+      setErrorMessage(readErrorMessage(error, "Unable to load orders."));
+    } finally {
+      setLoading(false);
     }
-
-    void loadOrders();
   }, []);
+
+  useEffect(() => {
+    void loadOrders();
+  }, [loadOrders]);
 
   const filteredOrders = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -70,9 +77,13 @@ export function OrdersPage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="Orders Table"
-        subtitle="SaaS-style searchable CRM table for order operations."
-        actions={<Link className="button-link" to="/orders">Refresh</Link>}
+        title="Orders"
+        subtitle="Review customer orders, payment state, fulfilment progress, and totals."
+        actions={
+          <button type="button" className="button-link button-link-secondary" onClick={() => void loadOrders()} disabled={loading}>
+            Refresh
+          </button>
+        }
       />
 
       <div className="table-toolbar">
@@ -89,15 +100,15 @@ export function OrdersPage() {
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as (typeof statusOptions)[number])}>
             {statusOptions.map((status) => (
               <option key={status} value={status}>
-                {status === "ALL" ? "All Statuses" : formatStatusLabel(status)}
+                {status === "ALL" ? "All Statuses" : formatEnumLabel(status)}
               </option>
             ))}
           </select>
         </label>
       </div>
 
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      {loading ? <p>Loading orders...</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {loading ? <LoadingState label="Loading orders..." /> : null}
 
       {!loading ? (
         <DataTable isEmpty={filteredOrders.length === 0} emptyText="No orders match your filters.">
@@ -108,6 +119,7 @@ export function OrdersPage() {
               <th>Status</th>
               <th>Date</th>
               <th>Amount</th>
+              <th className="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -120,10 +132,15 @@ export function OrdersPage() {
                 </td>
                 <td>{order.companyName || order.fullName}</td>
                 <td>
-                  <StatusBadge label={formatStatusLabel(order.status)} tone={getStatusTone(order.status)} />
+                  <StatusBadge label={formatEnumLabel(order.status)} tone={getStatusTone(order.status)} />
                 </td>
                 <td>{formatDate(order.createdAt)}</td>
-                <td>{order.totalAmount === null ? "Pending" : order.totalAmount.toFixed(2)}</td>
+                <td>{order.totalAmount === null ? "Pending quote" : formatMoney(order.totalAmount, order.currency)}</td>
+                <td className="actions-cell">
+                  <Link className="button-link button-link-secondary button-small" to={`/orders/${order.id}`}>
+                    Review
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>
