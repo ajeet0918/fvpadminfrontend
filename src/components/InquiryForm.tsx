@@ -1,6 +1,10 @@
 import { type FormEvent, useEffect, useState } from "react";
+import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
+import { formatEnumLabel } from "../lib/formatters";
 import type { InquiryStatus, OwnerOption, PaymentStatus, VerificationStatus } from "../types/domain";
+import { FormActions } from "./FormActions";
 import { FormSection } from "./FormSection";
+import { ErrorBanner } from "./PageState";
 
 export const inquiryStatuses: InquiryStatus[] = [
   "NEW",
@@ -40,11 +44,13 @@ export type InquiryFormValues = {
 
 type InquiryFormProps = {
   title: string;
+  description?: string;
   initialValues: InquiryFormValues;
   owners: OwnerOption[];
   lockAssignedTo?: boolean;
   loading?: boolean;
   onSubmit: (values: InquiryFormValues) => Promise<void> | void;
+  onCancel?: () => void;
   submitLabel: string;
   onConvertToLead?: (values: InquiryFormValues) => Promise<void> | void;
   disableConvert?: boolean;
@@ -52,11 +58,13 @@ type InquiryFormProps = {
 
 export function InquiryForm({
   title,
+  description,
   initialValues,
   owners,
   lockAssignedTo = false,
   loading = false,
   onSubmit,
+  onCancel,
   submitLabel,
   onConvertToLead,
   disableConvert = false
@@ -84,10 +92,13 @@ export function InquiryForm({
   }
 
   return (
-    <article className="admin-form-card module-form-scroll">
-      <h3 className="m-0 text-lg font-semibold text-text-primary">{title}</h3>
-      <form className="mt-3 grid gap-4" onSubmit={handleSubmit}>
-        <FormSection title="Inquiry Workflow">
+    <article className="admin-form-card form-page-card">
+      <header className="form-card-header">
+        <h2>{title}</h2>
+        {description ? <p>{description}</p> : null}
+      </header>
+      <form className="admin-edit-form" onSubmit={handleSubmit} aria-busy={submitting}>
+        <FormSection title="Workflow status" subtitle="Keep verification, payment, and ownership aligned with the current stage.">
           <div className="form-grid-2">
             <label>
               Status
@@ -97,7 +108,7 @@ export function InquiryForm({
                 onChange={(event) => setValues((current) => ({ ...current, status: event.target.value as InquiryStatus }))}
               >
                 {inquiryStatuses.map((status) => (
-                  <option key={status} value={status}>{status}</option>
+                  <option key={status} value={status}>{formatEnumLabel(status)}</option>
                 ))}
               </select>
             </label>
@@ -112,7 +123,7 @@ export function InquiryForm({
                 }))}
               >
                 {verificationStatuses.map((status) => (
-                  <option key={status} value={status}>{status}</option>
+                  <option key={status} value={status}>{formatEnumLabel(status)}</option>
                 ))}
               </select>
             </label>
@@ -127,52 +138,13 @@ export function InquiryForm({
                 }))}
               >
                 {paymentStatuses.map((status) => (
-                  <option key={status} value={status}>{status}</option>
+                  <option key={status} value={status}>{formatEnumLabel(status)}</option>
                 ))}
               </select>
             </label>
 
             <label>
-              Agreement ID
-              <input
-                value={values.agreementId}
-                onChange={(event) => setValues((current) => ({ ...current, agreementId: event.target.value }))}
-                placeholder="Optional for investor approval stage"
-              />
-            </label>
-
-            <label>
-              Committed Return Amount
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={values.committedReturnAmount}
-                onChange={(event) => setValues((current) => ({ ...current, committedReturnAmount: event.target.value }))}
-                placeholder="Investor return projection"
-              />
-            </label>
-
-            <label>
-              Farmer Action Note
-              <input
-                value={values.farmerActionNote}
-                onChange={(event) => setValues((current) => ({ ...current, farmerActionNote: event.target.value }))}
-                placeholder="Seed allocation or next farmer action"
-              />
-            </label>
-
-            <label>
-              Hub Action Note
-              <input
-                value={values.hubActionNote}
-                onChange={(event) => setValues((current) => ({ ...current, hubActionNote: event.target.value }))}
-                placeholder="Collection hub onboarding or field action"
-              />
-            </label>
-
-            <label>
-              Assigned To
+              Assigned to
               <select
                 value={values.assignedTo}
                 disabled={lockAssignedTo}
@@ -187,34 +159,81 @@ export function InquiryForm({
               </select>
             </label>
           </div>
+        </FormSection>
 
-          <label className="mt-3 grid gap-1 text-sm font-medium text-text-secondary">
-            Admin Notes
+        <FormSection title="Operational details" subtitle="Use only the fields relevant to this inquiry type and current approval stage.">
+          <div className="form-grid-2">
+            <label>
+              Agreement ID
+              <input
+                value={values.agreementId}
+                onChange={(event) => setValues((current) => ({ ...current, agreementId: event.target.value }))}
+                placeholder="Optional for investor approval stage"
+              />
+            </label>
+
+            <label>
+              Committed return amount
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={values.committedReturnAmount}
+                onChange={(event) => setValues((current) => ({ ...current, committedReturnAmount: event.target.value }))}
+                placeholder="Investor return projection"
+              />
+            </label>
+
+            <label>
+              Farmer action
+              <input
+                value={values.farmerActionNote}
+                onChange={(event) => setValues((current) => ({ ...current, farmerActionNote: event.target.value }))}
+                placeholder="Seed allocation or next farmer action"
+              />
+            </label>
+
+            <label>
+              Collection hub action
+              <input
+                value={values.hubActionNote}
+                onChange={(event) => setValues((current) => ({ ...current, hubActionNote: event.target.value }))}
+                placeholder="Collection hub onboarding or field action"
+              />
+            </label>
+
+          </div>
+
+          <label className="mt-4 grid gap-1 text-sm font-medium text-text-secondary">
+            Internal notes
             <textarea
               rows={5}
               value={values.adminNotes}
               onChange={(event) => setValues((current) => ({ ...current, adminNotes: event.target.value }))}
+              placeholder="Record decisions, outstanding documents, and the next action."
             />
           </label>
         </FormSection>
 
-        {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+        {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
 
-        <div className="form-actions">
-          <button type="submit" className="button-link" disabled={submitting || loading}>
-            {submitting ? "Saving..." : submitLabel}
-          </button>
-          {onConvertToLead ? (
+        <FormActions
+          submitLabel={submitLabel}
+          submitting={submitting}
+          disabled={loading}
+          onCancel={onCancel}
+          secondaryActions={onConvertToLead ? (
             <button
               type="button"
               className="button-link button-link-secondary"
               disabled={disableConvert}
               onClick={() => void onConvertToLead(values)}
             >
-              Convert To Lead
+              <PersonAddAltRoundedIcon fontSize="small" />
+              Convert to lead
             </button>
           ) : null}
-        </div>
+        />
       </form>
     </article>
   );

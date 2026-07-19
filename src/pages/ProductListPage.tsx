@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { ErrorBanner, LoadingState } from "../components/PageState";
@@ -68,7 +69,12 @@ export function ProductListPage() {
       <PageHeader
         title="Products"
         subtitle="Maintain catalog pricing, availability, categories, and storefront visibility."
-        actions={<Link className="button-link" to="/products/new">Create Product</Link>}
+        actions={(
+          <Link className="button-link" to="/products/new">
+            <AddRoundedIcon fontSize="small" />
+            Create product
+          </Link>
+        )}
       />
 
       <div className="filter-grid">

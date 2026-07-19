@@ -1,6 +1,9 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { formatEnumLabel } from "../lib/formatters";
 import type { LeadStatus, OwnerOption } from "../types/domain";
+import { FormActions } from "./FormActions";
 import { FormSection } from "./FormSection";
+import { ErrorBanner } from "./PageState";
 
 export const leadStatuses: LeadStatus[] = [
   "NEW",
@@ -25,11 +28,13 @@ export type LeadFormValues = {
 
 type LeadFormProps = {
   title: string;
+  description?: string;
   initialValues: LeadFormValues;
   owners: OwnerOption[];
   lockAssignedTo?: boolean;
   loading?: boolean;
   onSubmit: (values: LeadFormValues) => Promise<void> | void;
+  onCancel?: () => void;
   submitLabel: string;
   showDelete?: boolean;
   onDelete?: () => Promise<void> | void;
@@ -37,11 +42,13 @@ type LeadFormProps = {
 
 export function LeadForm({
   title,
+  description,
   initialValues,
   owners,
   lockAssignedTo = false,
   loading = false,
   onSubmit,
+  onCancel,
   submitLabel,
   showDelete = false,
   onDelete
@@ -69,15 +76,19 @@ export function LeadForm({
   }
 
   return (
-    <article className="admin-form-card module-form-scroll">
-      <h3 className="m-0 text-lg font-semibold text-text-primary">{title}</h3>
-      <form className="mt-3 grid gap-4" onSubmit={handleSubmit}>
-        <FormSection title="Lead Details">
+    <article className="admin-form-card form-page-card">
+      <header className="form-card-header">
+        <h2>{title}</h2>
+        {description ? <p>{description}</p> : null}
+      </header>
+      <form className="admin-edit-form" onSubmit={handleSubmit} aria-busy={submitting}>
+        <FormSection title="Contact and company" subtitle="Capture enough context for the sales team to qualify and follow up.">
           <div className="form-grid-2">
             <label>
-              Full Name
+              Full name
               <input
                 required
+                autoComplete="name"
                 value={values.fullName}
                 onChange={(event) => setValues((current) => ({ ...current, fullName: event.target.value }))}
               />
@@ -94,6 +105,7 @@ export function LeadForm({
               <input
                 required
                 type="email"
+                autoComplete="email"
                 value={values.email}
                 onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
               />
@@ -102,10 +114,17 @@ export function LeadForm({
               Phone
               <input
                 required
+                type="tel"
+                autoComplete="tel"
                 value={values.phone}
                 onChange={(event) => setValues((current) => ({ ...current, phone: event.target.value }))}
               />
             </label>
+          </div>
+        </FormSection>
+
+        <FormSection title="Pipeline ownership" subtitle="Set the lead stage, source, and responsible operations user.">
+          <div className="form-grid-2">
             <label>
               Status
               <select
@@ -114,7 +133,7 @@ export function LeadForm({
                 onChange={(event) => setValues((current) => ({ ...current, status: event.target.value as LeadStatus }))}
               >
                 {leadStatuses.map((status) => (
-                  <option key={status} value={status}>{status}</option>
+                  <option key={status} value={status}>{formatEnumLabel(status)}</option>
                 ))}
               </select>
             </label>
@@ -123,7 +142,7 @@ export function LeadForm({
               <input
                 value={values.source}
                 onChange={(event) => setValues((current) => ({ ...current, source: event.target.value }))}
-                placeholder="WEBSITE_CONTACT / ADMIN_PANEL"
+                placeholder="For example, ADMIN_PANEL"
               />
             </label>
             <label>
@@ -145,34 +164,33 @@ export function LeadForm({
               Inquiry ID
               <input
                 type="number"
+                min="1"
                 value={values.inquiryId}
                 onChange={(event) => setValues((current) => ({ ...current, inquiryId: event.target.value }))}
-                placeholder="optional"
+                placeholder="Optional"
               />
             </label>
           </div>
-          <label className="mt-3 grid gap-1 text-sm font-medium text-text-secondary">
-            Notes
+          <label className="mt-4 grid gap-1 text-sm font-medium text-text-secondary">
+            Internal notes
             <textarea
               rows={4}
               value={values.notes}
               onChange={(event) => setValues((current) => ({ ...current, notes: event.target.value }))}
+              placeholder="Record requirements, qualification context, and the next action."
             />
           </label>
         </FormSection>
 
-        {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+        {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
 
-        <div className="form-actions">
-          <button type="submit" className="button-link" disabled={submitting || loading}>
-            {submitting ? "Saving..." : submitLabel}
-          </button>
-          {showDelete && onDelete ? (
-            <button type="button" className="button-link button-danger" onClick={() => void onDelete()}>
-              Delete
-            </button>
-          ) : null}
-        </div>
+        <FormActions
+          submitLabel={submitLabel}
+          submitting={submitting}
+          disabled={loading}
+          onCancel={onCancel}
+          dangerAction={showDelete && onDelete ? { label: "Delete lead", onClick: () => void onDelete() } : undefined}
+        />
       </form>
     </article>
   );

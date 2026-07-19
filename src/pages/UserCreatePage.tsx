@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BackLink } from "../components/BackLink";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { UserForm, type UserFormValues } from "../components/UserForm";
 import { createAdminUserApi, fetchAdminRolesApi, readErrorMessage } from "../lib/api";
 import type { AdminRole } from "../types/domain";
@@ -55,20 +57,23 @@ export function UserCreatePage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="User Create"
-        subtitle="Create new admin users with role and contact details."
+        title="Create user"
+        subtitle="Add an operations user and assign the minimum role needed for their work."
+        actions={<BackLink to="/users" label="Back to users" />}
       />
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      <UserForm
-        title="Create User"
-        roles={roles}
-        initialValues={{ ...initialValues, roleCode: roles[0]?.code ?? "" }}
-        loading={loading}
-        onSubmit={handleSubmit}
-        onCancel={() => navigate("/users")}
-        submitLabel="Create User"
-        showPassword
-      />
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {loading ? <LoadingState label="Preparing user form..." /> : (
+        <UserForm
+          title="User account"
+          description="Assign identity, contact details, role, and an initial password."
+          roles={roles}
+          initialValues={{ ...initialValues, roleCode: roles[0]?.code ?? "" }}
+          onSubmit={handleSubmit}
+          onCancel={() => navigate("/users")}
+          submitLabel="Create user"
+          showPassword
+        />
+      )}
     </section>
   );
 }

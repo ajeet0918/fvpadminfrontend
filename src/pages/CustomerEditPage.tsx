@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { BackLink } from "../components/BackLink";
 import { CustomerForm, type CustomerFormValues } from "../components/CustomerForm";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState, SuccessBanner } from "../components/PageState";
 import {
   fetchAdminCustomerApi,
   readErrorMessage,
@@ -104,41 +106,44 @@ export function CustomerEditPage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="Customer Edit"
-        subtitle="Update customer profile details used for order communication and fulfillment."
+        title="Edit customer"
+        subtitle="Maintain customer contact, account status, and default delivery information."
+        actions={<BackLink to="/customers" label="Back to customers" />}
       />
 
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      {successMessage ? <p className="success-text">{successMessage}</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {successMessage ? <SuccessBanner message={successMessage} /> : null}
 
       {summary ? (
-        <div className="kpi-grid quote-kpi-grid">
-          <article className="kpi-card">
+        <div className="record-summary-grid">
+          <div>
             <span>Total Orders</span>
             <strong>{summary.totalOrders}</strong>
-          </article>
-          <article className="kpi-card">
+          </div>
+          <div>
             <span>Last Order</span>
             <strong>{summary.lastOrderNumber ?? "-"}</strong>
-          </article>
-          <article className="kpi-card">
+          </div>
+          <div>
             <span>Created At</span>
             <strong>{formatDate(summary.createdAt)}</strong>
-          </article>
-          <article className="kpi-card">
+          </div>
+          <div>
             <span>Last Updated</span>
             <strong>{formatDate(summary.updatedAt)}</strong>
-          </article>
+          </div>
         </div>
       ) : null}
 
-      <CustomerForm
-        title="Edit Customer"
-        initialValues={values}
-        loading={loading}
-        onSubmit={handleSubmit}
-        onCancel={() => navigate("/customers")}
-      />
+      {loading ? <LoadingState label="Loading customer..." /> : (
+        <CustomerForm
+          title="Customer information"
+          description="Changes are used for future orders and delivery coordination."
+          initialValues={values}
+          onSubmit={handleSubmit}
+          onCancel={() => navigate("/customers")}
+        />
+      )}
     </section>
   );
 }

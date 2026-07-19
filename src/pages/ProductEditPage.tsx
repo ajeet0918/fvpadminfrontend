@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { BackLink } from "../components/BackLink";
 import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { ProductForm, type ProductFormValues } from "../components/ProductForm";
 import {
   deleteAdminProductApi,
@@ -137,21 +139,24 @@ export function ProductEditPage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="Product Edit"
-        subtitle="Update product details with full prefilled form and safe actions."
+        title="Edit product"
+        subtitle="Update catalog information, storefront visibility, pricing, and imagery."
+        actions={<BackLink to="/products" label="Back to products" />}
       />
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      <ProductForm
-        title="Edit Product"
-        categories={categories}
-        initialValues={values}
-        loading={loading}
-        onSubmit={handleSubmit}
-        onCancel={() => navigate("/products")}
-        submitLabel="Save Changes"
-        showDelete
-        onDelete={handleDelete}
-      />
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {loading ? <LoadingState label="Loading product..." /> : (
+        <ProductForm
+          title="Product information"
+          description="Changes affect the public catalog when this product is active."
+          categories={categories}
+          initialValues={values}
+          onSubmit={handleSubmit}
+          onCancel={() => navigate("/products")}
+          submitLabel="Save changes"
+          showDelete
+          onDelete={handleDelete}
+        />
+      )}
       <ConfirmationDialog
         open={deleteConfirmationOpen}
         title="Delete product?"

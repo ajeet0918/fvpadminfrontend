@@ -1,6 +1,10 @@
 import { FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { BackLink } from "../components/BackLink";
+import { FormActions } from "../components/FormActions";
+import { FormSection } from "../components/FormSection";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner } from "../components/PageState";
 import { createInquiryApi, readErrorMessage } from "../lib/api";
 
 type InquiryCreateForm = {
@@ -52,77 +56,88 @@ export function InquiryCreatePage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="Create Inquiry"
-        subtitle="Capture a manual inquiry and continue workflow from detail screen."
-        actions={<Link className="button-link button-link-secondary button-small" to="/inquiries">Back To Search</Link>}
+        title="Create inquiry"
+        subtitle="Capture a buyer request manually and continue qualification from the inquiry record."
+        actions={<BackLink to="/inquiries" label="Back to inquiries" />}
       />
 
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
 
-      <article className="admin-form-card module-form-scroll">
-        <h3>Inquiry Details</h3>
-        <form className="user-form-grid" onSubmit={handleSubmit}>
-          <div className="form-grid-2">
+      <article className="admin-form-card form-page-card">
+        <header className="form-card-header">
+          <h2>Inquiry information</h2>
+          <p>Record the buyer's contact details and product requirement before assigning the workflow.</p>
+        </header>
+        <form className="admin-edit-form" onSubmit={handleSubmit} aria-busy={saving}>
+          <FormSection title="Buyer details" subtitle="Primary contact information for follow-up and quotation.">
+            <div className="form-grid-2">
+              <label>
+                Full name
+                <input
+                  required
+                  autoComplete="name"
+                  value={form.fullName}
+                  onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))}
+                />
+              </label>
+              <label>
+                Company name
+                <input
+                  required
+                  value={form.companyName}
+                  onChange={(event) => setForm((current) => ({ ...current, companyName: event.target.value }))}
+                />
+              </label>
+              <label>
+                Email
+                <input
+                  required
+                  type="email"
+                  autoComplete="email"
+                  value={form.email}
+                  onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                />
+              </label>
+              <label>
+                Phone
+                <input
+                  required
+                  type="tel"
+                  autoComplete="tel"
+                  value={form.phone}
+                  onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
+                />
+              </label>
+            </div>
+          </FormSection>
+
+          <FormSection title="Buyer requirement" subtitle="Capture the requested product and enough detail for the sales team to respond.">
             <label>
-              Full Name
-              <input
-                required
-                value={form.fullName}
-                onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))}
-              />
-            </label>
-            <label>
-              Company Name
-              <input
-                required
-                value={form.companyName}
-                onChange={(event) => setForm((current) => ({ ...current, companyName: event.target.value }))}
-              />
-            </label>
-            <label>
-              Email
-              <input
-                required
-                type="email"
-                value={form.email}
-                onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-              />
-            </label>
-            <label>
-              Phone
-              <input
-                required
-                value={form.phone}
-                onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-              />
-            </label>
-            <label className="form-span-2">
-              Product Name
+              Product or requirement
               <input
                 required
                 value={form.productName}
                 onChange={(event) => setForm((current) => ({ ...current, productName: event.target.value }))}
               />
             </label>
-          </div>
+            <label className="mt-4">
+              Inquiry message
+              <textarea
+                required
+                rows={5}
+                minLength={10}
+                value={form.message}
+                onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))}
+                placeholder="Include expected quantity, delivery location, timeline, and any specifications."
+              />
+            </label>
+          </FormSection>
 
-          <label>
-            Inquiry Message
-            <textarea
-              required
-              rows={5}
-              minLength={10}
-              value={form.message}
-              onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))}
-              placeholder="Write customer requirement details..."
-            />
-          </label>
-
-          <div className="form-actions">
-            <button type="submit" className="button-link" disabled={saving}>
-              {saving ? "Saving..." : "Create Inquiry"}
-            </button>
-          </div>
+          <FormActions
+            submitLabel="Create inquiry"
+            submitting={saving}
+            onCancel={() => navigate("/inquiries")}
+          />
         </form>
       </article>
     </section>

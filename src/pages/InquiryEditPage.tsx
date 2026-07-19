@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import MailOutlineRoundedIcon from "@mui/icons-material/MailOutlineRounded";
+import { useNavigate, useParams } from "react-router-dom";
+import { BackLink } from "../components/BackLink";
 import { InquiryForm, type InquiryFormValues } from "../components/InquiryForm";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState, SuccessBanner } from "../components/PageState";
 import {
   createPortalUserForInquiryApi,
   convertInquiryToLeadApi,
@@ -14,6 +17,7 @@ import {
 } from "../lib/api";
 import { getCurrentRole, getCurrentUsername } from "../lib/auth";
 import { downloadBlob } from "../lib/downloads";
+import { formatEnumLabel } from "../lib/formatters";
 import type { Inquiry, OwnerOption } from "../types/domain";
 
 const emptyValues: InquiryFormValues = {
@@ -33,6 +37,7 @@ function formatDate(value: string) {
 }
 
 export function InquiryEditPage() {
+  const navigate = useNavigate();
   const params = useParams<{ id: string }>();
   const inquiryId = Number(params.id);
   const currentRole = getCurrentRole();
@@ -163,8 +168,8 @@ export function InquiryEditPage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="Inquiry Detail"
-        subtitle="Review inquiry context and progress it through pipeline states."
+        title="Inquiry details"
+        subtitle="Review the submitted information, documents, ownership, and current workflow state."
         actions={(
           <div className="form-actions">
             {canCreatePortalUser ? (
@@ -174,51 +179,57 @@ export function InquiryEditPage() {
                 onClick={() => void handlePortalInvite()}
                 disabled={sendingInvite}
               >
-                {sendingInvite ? "Sending..." : "Send Portal Invite"}
+                <MailOutlineRoundedIcon fontSize="small" />
+                {sendingInvite ? "Sending..." : "Send portal invite"}
               </button>
             ) : null}
-            <Link className="button-link button-small button-link-secondary" to="/inquiries">Back To Search</Link>
+            <BackLink to="/inquiries" label="Back to inquiries" />
           </div>
         )}
       />
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      {successMessage ? <p className="success-text">{successMessage}</p> : null}
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {successMessage ? <SuccessBanner message={successMessage} /> : null}
+      {loading ? <LoadingState label="Loading inquiry..." /> : null}
 
-      {inquiry ? (
-        <article className="admin-form-card">
-          <h3>Inquiry Detail</h3>
-          <div className="form-grid-2">
+      {!loading && inquiry ? (
+        <article className="admin-form-card form-page-card inquiry-detail-card">
+          <header className="form-card-header">
+            <h2>{inquiry.fullName}</h2>
+            <p>{inquiry.referenceId ?? "Reference pending"} - {formatEnumLabel(inquiry.inquiryType)}</p>
+          </header>
+          <div className="inquiry-detail-body">
+          <div className="record-detail-grid">
             <div>
-              <strong>{inquiry.fullName}</strong>
-              <p className="table-muted">{inquiry.referenceId ?? "Reference pending"}</p>
+              <span>Company</span>
+              <strong>{inquiry.companyName || "-"}</strong>
             </div>
             <div>
-              <strong>{inquiry.inquiryType}</strong>
-              <p className="table-muted">Source: {inquiry.source}</p>
+              <span>Source</span>
+              <strong>{formatEnumLabel(inquiry.source)}</strong>
             </div>
             <div>
-              <strong>Email</strong>
-              <p className="table-muted">{inquiry.email}</p>
+              <span>Email</span>
+              <strong>{inquiry.email}</strong>
             </div>
             <div>
-              <strong>Phone</strong>
-              <p className="table-muted">{inquiry.phone}</p>
+              <span>Phone</span>
+              <strong>{inquiry.phone}</strong>
             </div>
             <div>
-              <strong>Verification</strong>
-              <p className="table-muted">{inquiry.verificationStatus}</p>
+              <span>Verification</span>
+              <strong>{formatEnumLabel(inquiry.verificationStatus)}</strong>
             </div>
             <div>
-              <strong>Payment</strong>
-              <p className="table-muted">{inquiry.paymentStatus}</p>
+              <span>Payment</span>
+              <strong>{formatEnumLabel(inquiry.paymentStatus)}</strong>
             </div>
             <div>
-              <strong>Created</strong>
-              <p className="table-muted">{formatDate(inquiry.createdAt)}</p>
+              <span>Created</span>
+              <strong>{formatDate(inquiry.createdAt)}</strong>
             </div>
             <div>
-              <strong>Updated</strong>
-              <p className="table-muted">{formatDate(inquiry.updatedAt)}</p>
+              <span>Updated</span>
+              <strong>{formatDate(inquiry.updatedAt)}</strong>
             </div>
           </div>
           {inquiry.inquiryType === "GENERAL" ? (
@@ -310,29 +321,33 @@ export function InquiryEditPage() {
             <DocumentLink label="Bank Passbook" documentId={inquiry.bankPassbookDocumentId} path={inquiry.bankPassbookDocumentUrl} />
             <DocumentLink label="Hub Document" documentId={inquiry.hubDocumentId} path={inquiry.hubDocumentUrl} />
           </div>
+          </div>
         </article>
       ) : null}
 
-      <InquiryForm
-        title="Update Inquiry"
-        initialValues={values}
-        owners={owners}
-        lockAssignedTo={isSales}
-        loading={loading}
-        onSubmit={handleSubmit}
-        submitLabel="Save Changes"
-        onConvertToLead={handleConvertToLead}
-        disableConvert={inquiry?.status === "CONVERTED"}
-      />
+      {!loading ? (
+        <InquiryForm
+          title="Workflow controls"
+          description="Update review status, assignment, and operational notes without changing submitted applicant data."
+          initialValues={values}
+          owners={owners}
+          lockAssignedTo={isSales}
+          onSubmit={handleSubmit}
+          onCancel={() => navigate("/inquiries")}
+          submitLabel="Save changes"
+          onConvertToLead={handleConvertToLead}
+          disableConvert={inquiry?.status === "CONVERTED"}
+        />
+      ) : null}
     </section>
   );
 }
 
 function InfoItem({ label, value }: { label: string; value: string | number | null }) {
   return (
-    <div>
-      <strong>{label}</strong>
-      <p className="table-muted">{value ?? "-"}</p>
+    <div className="info-item">
+      <span>{label}</span>
+      <strong>{value ?? "-"}</strong>
     </div>
   );
 }

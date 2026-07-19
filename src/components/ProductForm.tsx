@@ -1,8 +1,13 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import { API_BASE_URL, downloadAdminDocumentContentApi, uploadProductImageApi } from "../lib/api";
 import { downloadBlob } from "../lib/downloads";
 import type { Category, ProductStatus } from "../types/domain";
+import { FormActions } from "./FormActions";
 import { FormSection } from "./FormSection";
+import { ErrorBanner } from "./PageState";
 
 export type ProductFormValues = {
   name: string;
@@ -27,6 +32,7 @@ export type ProductFormValues = {
 
 type ProductFormProps = {
   title: string;
+  description?: string;
   categories: Category[];
   initialValues: ProductFormValues;
   loading?: boolean;
@@ -55,6 +61,7 @@ function resolveApiOrigin(baseUrl: string) {
 
 export function ProductForm({
   title,
+  description,
   categories,
   initialValues,
   loading = false,
@@ -173,13 +180,19 @@ export function ProductForm({
   }
 
   return (
-    <article className="admin-form-card module-form-scroll">
-      <h3 className="m-0 text-lg font-semibold text-text-primary">{title}</h3>
-      <form className="mt-3 grid gap-4" onSubmit={handleSubmit}>
-        <FormSection title="Catalog Details">
+    <article className="admin-form-card form-page-card">
+      <header className="form-card-header">
+        <h2>{title}</h2>
+        {description ? <p>{description}</p> : null}
+      </header>
+      <form className="admin-edit-form" onSubmit={handleSubmit} aria-busy={submitting || uploadingImage}>
+        <FormSection
+          title="Catalog details"
+          subtitle="Information buyers use to identify, price, and order this product."
+        >
           <div className="form-grid-2">
             <label>
-              Name
+              Product name
               <input
                 required
                 value={values.name}
@@ -199,7 +212,7 @@ export function ProductForm({
               />
             </label>
             <label>
-              Slug
+              Storefront slug
               <input
                 required
                 value={values.slug}
@@ -207,7 +220,7 @@ export function ProductForm({
               />
             </label>
             <label>
-              Price
+              Base price
               <input
                 required
                 type="number"
@@ -227,7 +240,7 @@ export function ProductForm({
               />
             </label>
             <label>
-              Tax Rate (%)
+              Tax rate (%)
               <input
                 required
                 type="number"
@@ -238,7 +251,7 @@ export function ProductForm({
               />
             </label>
             <label>
-              Discount Rate (%)
+              Default discount (%)
               <input
                 required
                 type="number"
@@ -264,40 +277,44 @@ export function ProductForm({
               </select>
             </label>
             <label>
-              Status
+              Storefront status
               <select
                 required
                 value={values.status}
                 onChange={(event) => setValues((current) => ({ ...current, status: event.target.value as ProductStatus }))}
               >
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="INACTIVE">INACTIVE</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
               </select>
             </label>
             <label>
-              MOQ
+              Minimum order quantity
               <input
                 required
                 value={values.moq}
                 onChange={(event) => setValues((current) => ({ ...current, moq: event.target.value }))}
+                placeholder="For example, 100 kg"
               />
             </label>
           </div>
 
-          <label className="inline-checkbox mt-3">
+          <label className="inline-checkbox mt-4">
             <input
               type="checkbox"
               checked={values.featured}
               onChange={(event) => setValues((current) => ({ ...current, featured: event.target.checked }))}
             />
-            Featured
+            Feature this product on the storefront
           </label>
         </FormSection>
 
-        <FormSection title="Descriptions">
+        <FormSection
+          title="Product descriptions"
+          subtitle="Keep the short description concise and use the full description for specifications and buyer context."
+        >
           <div className="grid gap-3">
             <label>
-              Short Description
+              Short description
               <textarea
                 required
                 rows={2}
@@ -306,7 +323,7 @@ export function ProductForm({
               />
             </label>
             <label>
-              Description
+              Full description
               <textarea
                 required
                 rows={4}
@@ -317,73 +334,80 @@ export function ProductForm({
           </div>
         </FormSection>
 
-        <FormSection title="Image">
-          <div className="grid gap-3">
-            <div className="grid gap-1">
-              <strong className="text-sm text-text-primary">Product image</strong>
-              <span className="table-muted">
-                {values.imageOriginalFileName || (values.imageDocumentId ? "Uploaded image" : "No image selected")}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="button-link button-link-secondary w-fit cursor-pointer">
-                Select Local Image
-                <input
-                  hidden
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    void handleImageFileSelected(file);
+        <FormSection
+          title="Product image"
+          subtitle="Upload a clear product photograph. The image is stored using the existing document service."
+        >
+          <div className="product-image-editor">
+            <div className="product-image-preview">
+              {previewLoading ? <span className="table-muted">Loading preview...</span> : null}
+              {!previewLoading && previewSrc ? (
+                <img
+                  src={previewSrc}
+                  alt={`${values.name || "Product"} preview`}
+                  className="image-preview"
+                  onError={() => {
+                    setPreviewSrc("");
+                    setErrorMessage("Unable to display image preview.");
                   }}
                 />
-              </label>
-              {imageReference ? (
-                <button
-                  type="button"
-                  className="button-link button-link-secondary"
-                  onClick={() => void handleDownloadImage()}
-                  disabled={downloadingImage}
-                >
-                  {downloadingImage ? "Downloading..." : "Download Image"}
-                </button>
               ) : null}
-              {uploadingImage ? <span className="table-muted">Uploading image...</span> : null}
+              {!previewLoading && !previewSrc ? (
+                <div className="image-empty-state">
+                  <ImageOutlinedIcon />
+                  <span>No image selected</span>
+                </div>
+              ) : null}
+            </div>
+            <div className="product-image-controls">
+              <div>
+                <strong className="text-sm text-text-primary">
+                  {values.imageOriginalFileName || "Choose a product image"}
+                </strong>
+                <p className="field-help">
+                  JPG, PNG, or WebP works best. Use a landscape image with the product clearly visible.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="button-link button-link-secondary w-fit cursor-pointer">
+                  <UploadFileRoundedIcon fontSize="small" />
+                  {uploadingImage ? "Uploading..." : "Choose image"}
+                  <input
+                    hidden
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={uploadingImage}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      void handleImageFileSelected(file);
+                    }}
+                  />
+                </label>
+                {imageReference ? (
+                  <button
+                    type="button"
+                    className="button-link button-link-secondary"
+                    onClick={() => void handleDownloadImage()}
+                    disabled={downloadingImage}
+                  >
+                    <DownloadRoundedIcon fontSize="small" />
+                    {downloadingImage ? "Downloading..." : "Download"}
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
-          {previewLoading ? <p className="table-muted mt-3">Loading image preview...</p> : null}
-          {previewSrc ? (
-            <div className="image-preview-wrap mt-3">
-              <img
-                src={previewSrc}
-                alt="Product preview"
-                className="image-preview"
-                onError={() => {
-                  setPreviewSrc("");
-                  setErrorMessage("Unable to display image preview.");
-                }}
-              />
-            </div>
-          ) : null}
         </FormSection>
 
-        {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+        {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
 
-        <div className="form-actions">
-          <button type="submit" className="button-link" disabled={submitting || loading || uploadingImage}>
-            {submitting ? "Saving..." : submitLabel}
-          </button>
-          {onCancel ? (
-            <button type="button" className="button-link button-link-secondary" onClick={onCancel}>
-              Cancel
-            </button>
-          ) : null}
-          {showDelete && onDelete ? (
-            <button type="button" className="button-link button-danger" onClick={() => void onDelete()}>
-              Delete
-            </button>
-          ) : null}
-        </div>
+        <FormActions
+          submitLabel={submitLabel}
+          submitting={submitting}
+          disabled={loading || uploadingImage}
+          onCancel={onCancel}
+          dangerAction={showDelete && onDelete ? { label: "Delete product", onClick: () => void onDelete() } : undefined}
+        />
       </form>
     </article>
   );

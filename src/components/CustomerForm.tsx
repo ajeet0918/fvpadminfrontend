@@ -1,5 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { FormActions } from "./FormActions";
 import { FormSection } from "./FormSection";
+import { ErrorBanner } from "./PageState";
 
 export type CustomerFormValues = {
   fullName: string;
@@ -15,6 +17,7 @@ export type CustomerFormValues = {
 
 type CustomerFormProps = {
   title: string;
+  description?: string;
   initialValues: CustomerFormValues;
   loading?: boolean;
   onSubmit: (values: CustomerFormValues) => Promise<void> | void;
@@ -23,6 +26,7 @@ type CustomerFormProps = {
 
 export function CustomerForm({
   title,
+  description,
   initialValues,
   loading = false,
   onSubmit,
@@ -51,21 +55,25 @@ export function CustomerForm({
   }
 
   return (
-    <article className="admin-form-card module-form-scroll">
-      <h3 className="m-0 text-lg font-semibold text-text-primary">{title}</h3>
-      <form className="mt-3 grid gap-4" onSubmit={handleSubmit}>
-        <FormSection title="Section 1: Basic Info" subtitle="Core customer identity and business context.">
+    <article className="admin-form-card form-page-card">
+      <header className="form-card-header">
+        <h2>{title}</h2>
+        {description ? <p>{description}</p> : null}
+      </header>
+      <form className="admin-edit-form" onSubmit={handleSubmit} aria-busy={submitting}>
+        <FormSection title="Customer identity" subtitle="Primary contact and business information used across orders.">
           <div className="form-grid-2">
             <label>
-              Full Name
+              Full name
               <input
                 required
+                autoComplete="name"
                 value={values.fullName}
                 onChange={(event) => setValues((current) => ({ ...current, fullName: event.target.value }))}
               />
             </label>
             <label>
-              Company Name
+              Company name
               <input
                 required
                 value={values.companyName}
@@ -74,23 +82,24 @@ export function CustomerForm({
             </label>
           </div>
 
-          <label className="inline-checkbox mt-3">
+          <label className="inline-checkbox mt-4">
             <input
               type="checkbox"
               checked={values.active}
               onChange={(event) => setValues((current) => ({ ...current, active: event.target.checked }))}
             />
-            Active Customer
+            Customer account is active
           </label>
         </FormSection>
 
-        <FormSection title="Section 2: Contact Details" subtitle="Primary contact channels for order communication.">
+        <FormSection title="Contact details" subtitle="Used for order updates, delivery coordination, and support.">
           <div className="form-grid-2">
             <label>
               Email
               <input
                 required
                 type="email"
+                autoComplete="email"
                 value={values.email}
                 onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
               />
@@ -99,6 +108,8 @@ export function CustomerForm({
               Phone
               <input
                 required
+                type="tel"
+                autoComplete="tel"
                 value={values.phone}
                 onChange={(event) => setValues((current) => ({ ...current, phone: event.target.value }))}
               />
@@ -106,12 +117,13 @@ export function CustomerForm({
           </div>
         </FormSection>
 
-        <FormSection title="Section 3: Additional Details" subtitle="Address and fulfillment details.">
+        <FormSection title="Delivery address" subtitle="Default destination used when coordinating fulfilment.">
           <div className="form-grid-2">
             <label>
               City
               <input
                 required
+                autoComplete="address-level2"
                 value={values.city}
                 onChange={(event) => setValues((current) => ({ ...current, city: event.target.value }))}
               />
@@ -120,14 +132,17 @@ export function CustomerForm({
               State
               <input
                 required
+                autoComplete="address-level1"
                 value={values.state}
                 onChange={(event) => setValues((current) => ({ ...current, state: event.target.value }))}
               />
             </label>
             <label>
-              Postal Code
+              Postal code
               <input
                 required
+                inputMode="numeric"
+                autoComplete="postal-code"
                 value={values.postalCode}
                 onChange={(event) => setValues((current) => ({ ...current, postalCode: event.target.value }))}
               />
@@ -135,28 +150,25 @@ export function CustomerForm({
           </div>
 
           <label className="mt-3 grid gap-1 text-sm font-medium text-text-secondary">
-            Delivery Address
+            Street address
             <textarea
               required
               rows={4}
+              autoComplete="street-address"
               value={values.deliveryAddress}
               onChange={(event) => setValues((current) => ({ ...current, deliveryAddress: event.target.value }))}
             />
           </label>
         </FormSection>
 
-        {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+        {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
 
-        <div className="form-actions">
-          <button type="submit" className="button-link" disabled={submitting || loading}>
-            {submitting ? "Saving..." : "Save"}
-          </button>
-          {onCancel ? (
-            <button type="button" className="button-link button-link-secondary" onClick={onCancel}>
-              Cancel
-            </button>
-          ) : null}
-        </div>
+        <FormActions
+          submitLabel="Save customer"
+          submitting={submitting}
+          disabled={loading}
+          onCancel={onCancel}
+        />
       </form>
     </article>
   );
