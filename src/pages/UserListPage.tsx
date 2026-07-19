@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { ErrorBanner, LoadingState } from "../components/PageState";
@@ -60,7 +61,12 @@ export function UserListPage() {
       <PageHeader
         title="Users"
         subtitle="Manage operations access, assigned roles, and account status."
-        actions={<Link className="button-link" to="/users/new">Create User</Link>}
+        actions={(
+          <Link className="button-link" to="/users/new">
+            <PersonAddAltRoundedIcon fontSize="small" />
+            Create user
+          </Link>
+        )}
       />
 
       <div className="filter-grid">

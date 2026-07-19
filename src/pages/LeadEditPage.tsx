@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { BackLink } from "../components/BackLink";
 import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { LeadForm, type LeadFormValues } from "../components/LeadForm";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState, SuccessBanner } from "../components/PageState";
 import {
   createErrorWithCause,
   deleteLeadApi,
@@ -119,23 +121,26 @@ export function LeadEditPage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="Lead Edit"
-        subtitle="Update ownership, stage, notes, and inquiry linkage."
-        actions={<Link className="button-link button-small" to="/leads">Back To Search</Link>}
+        title="Edit lead"
+        subtitle="Update ownership, pipeline stage, qualification notes, and inquiry linkage."
+        actions={<BackLink to="/leads" label="Back to leads" />}
       />
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      {successMessage ? <p className="success-text">{successMessage}</p> : null}
-      <LeadForm
-        title="Edit Lead"
-        initialValues={values}
-        owners={owners}
-        lockAssignedTo={isSales}
-        loading={loading}
-        onSubmit={handleSubmit}
-        submitLabel="Save Changes"
-        showDelete
-        onDelete={handleDelete}
-      />
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {successMessage ? <SuccessBanner message={successMessage} /> : null}
+      {loading ? <LoadingState label="Loading lead..." /> : (
+        <LeadForm
+          title="Lead information"
+          description="Keep the contact record and pipeline ownership current for the next follow-up."
+          initialValues={values}
+          owners={owners}
+          lockAssignedTo={isSales}
+          onSubmit={handleSubmit}
+          onCancel={() => navigate("/leads")}
+          submitLabel="Save changes"
+          showDelete
+          onDelete={handleDelete}
+        />
+      )}
       <ConfirmationDialog
         open={deleteConfirmationOpen}
         title="Delete lead?"

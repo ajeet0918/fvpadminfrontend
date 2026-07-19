@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BackLink } from "../components/BackLink";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { ProductForm, type ProductFormValues } from "../components/ProductForm";
 import { createAdminProductApi, fetchCategoriesApi, readErrorMessage } from "../lib/api";
 import type { Category } from "../types/domain";
@@ -75,22 +77,25 @@ export function ProductCreatePage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="Product Create"
-        subtitle="Create a new product entry with complete catalog details."
+        title="Create product"
+        subtitle="Add a catalog item with pricing, availability, buyer information, and imagery."
+        actions={<BackLink to="/products" label="Back to products" />}
       />
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      <ProductForm
-        title="Create Product"
-        categories={categories}
-        initialValues={{
-          ...initialValues,
-          categoryId: String(categories[0]?.id ?? "")
-        }}
-        loading={loading}
-        onSubmit={handleSubmit}
-        onCancel={() => navigate("/products")}
-        submitLabel="Save Product"
-      />
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {loading ? <LoadingState label="Preparing product form..." /> : (
+        <ProductForm
+          title="Product information"
+          description="Complete the required catalog fields before making the item available on the storefront."
+          categories={categories}
+          initialValues={{
+            ...initialValues,
+            categoryId: String(categories[0]?.id ?? "")
+          }}
+          onSubmit={handleSubmit}
+          onCancel={() => navigate("/products")}
+          submitLabel="Create product"
+        />
+      )}
     </section>
   );
 }

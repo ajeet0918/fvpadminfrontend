@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { BackLink } from "../components/BackLink";
 import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState, SuccessBanner } from "../components/PageState";
 import { UserForm, type UserFormValues } from "../components/UserForm";
 import {
   deleteAdminUserApi,
@@ -135,25 +137,28 @@ export function UserEditPage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="User Edit"
-        subtitle="Edit profile details, role, status, and reset password safely."
+        title="Edit user"
+        subtitle="Manage profile details, access role, account status, and password recovery."
+        actions={<BackLink to="/users" label="Back to users" />}
       />
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      {successMessage ? <p className="success-text">{successMessage}</p> : null}
-      <UserForm
-        title="Edit User"
-        roles={roles}
-        initialValues={values}
-        loading={loading}
-        onSubmit={handleSubmit}
-        onCancel={() => navigate("/users")}
-        submitLabel="Save Changes"
-        showPassword={false}
-        showResetPassword
-        onResetPassword={handleResetPassword}
-        onDeactivateOrDelete={handleDeactivateOrDelete}
-        deactivateLabel={values.active ? "Deactivate" : "Delete"}
-      />
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {successMessage ? <SuccessBanner message={successMessage} /> : null}
+      {loading ? <LoadingState label="Loading user..." /> : (
+        <UserForm
+          title="User account"
+          description="Profile changes and role assignments take effect for the user's next request."
+          roles={roles}
+          initialValues={values}
+          onSubmit={handleSubmit}
+          onCancel={() => navigate("/users")}
+          submitLabel="Save changes"
+          showPassword={false}
+          showResetPassword
+          onResetPassword={handleResetPassword}
+          onDeactivateOrDelete={handleDeactivateOrDelete}
+          deactivateLabel={values.active ? "Deactivate user" : "Delete user"}
+        />
+      )}
       <ConfirmationDialog
         open={confirmationAction !== null}
         title={confirmationAction === "deactivate" ? "Deactivate user?" : "Delete user permanently?"}

@@ -16,7 +16,8 @@ import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSetting
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import { clearAccessToken } from "../lib/auth";
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import { clearAccessToken, getCurrentUsername } from "../lib/auth";
 
 const navSections = [
   {
@@ -60,6 +61,8 @@ const navSections = [
 export function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const currentUsername = getCurrentUsername();
+  const currentModule = getCurrentModule(location.pathname);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -200,20 +203,26 @@ export function AdminLayout() {
               </button>
               <div className="admin-workspace-label">
                 <span>FVP Purepick</span>
-                <strong>Operations workspace</strong>
+                <strong>{currentModule}</strong>
               </div>
             </div>
-            <a
-              className="button-link button-link-secondary button-small"
-              href="https://www.fvppurepick.com/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <span className="inline-flex items-center gap-1.5">
+            <div className="admin-topbar-actions">
+              {currentUsername ? (
+                <div className="admin-user-chip" title={`Signed in as ${currentUsername}`}>
+                  <AccountCircleOutlinedIcon fontSize="small" />
+                  <span>{currentUsername}</span>
+                </div>
+              ) : null}
+              <a
+                className="button-link button-link-secondary button-small"
+                href="https://www.fvppurepick.com/"
+                target="_blank"
+                rel="noreferrer"
+              >
                 View website
                 <OpenInNewRoundedIcon fontSize="inherit" />
-              </span>
-            </a>
+              </a>
+            </div>
           </div>
         </header>
 
@@ -232,4 +241,11 @@ function isActiveRoute(current: string, navPath: string) {
     return current === "/dashboard" || current === "/";
   }
   return current === navPath || current.startsWith(`${navPath}/`);
+}
+
+function getCurrentModule(pathname: string) {
+  const activeItem = navSections
+    .flatMap((section) => section.items)
+    .find((item) => isActiveRoute(pathname, item.path));
+  return activeItem?.label ?? "Operations workspace";
 }

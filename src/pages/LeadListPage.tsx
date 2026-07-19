@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { ErrorBanner, LoadingState } from "../components/PageState";
@@ -66,7 +67,12 @@ export function LeadListPage() {
       <PageHeader
         title="Leads"
         subtitle="Track qualified contacts, ownership, source, and progress through the sales pipeline."
-        actions={<Link className="button-link" to="/leads/new">Create Lead</Link>}
+        actions={(
+          <Link className="button-link" to="/leads/new">
+            <AddRoundedIcon fontSize="small" />
+            Create lead
+          </Link>
+        )}
       />
 
       <div className="filter-grid filter-grid-4">

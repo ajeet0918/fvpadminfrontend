@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import { DataTable } from "../components/DataTable";
 import { PageHeader } from "../components/PageHeader";
 import { ErrorBanner, LoadingState } from "../components/PageState";
@@ -81,6 +82,7 @@ export function OrdersPage() {
         subtitle="Review customer orders, payment state, fulfilment progress, and totals."
         actions={
           <button type="button" className="button-link button-link-secondary" onClick={() => void loadOrders()} disabled={loading}>
+            <RefreshRoundedIcon fontSize="small" />
             Refresh
           </button>
         }

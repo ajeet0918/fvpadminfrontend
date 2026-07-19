@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { BackLink } from "../components/BackLink";
 import { LeadForm, type LeadFormValues } from "../components/LeadForm";
 import { PageHeader } from "../components/PageHeader";
+import { ErrorBanner, LoadingState } from "../components/PageState";
 import { createErrorWithCause, createLeadApi, fetchAssignableOwnersApi, readErrorMessage } from "../lib/api";
 import { getCurrentRole, getCurrentUsername } from "../lib/auth";
 import type { OwnerOption } from "../types/domain";
@@ -24,15 +26,19 @@ export function LeadCreatePage() {
   const currentUsername = getCurrentUsername();
   const isSales = currentRole === "SALES";
   const [owners, setOwners] = useState<OwnerOption[]>([]);
+  const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadOwners() {
       try {
+        setLoading(true);
         const ownerList = await fetchAssignableOwnersApi();
         setOwners(ownerList);
       } catch (error) {
         setErrorMessage(readErrorMessage(error, "Unable to load owner list."));
+      } finally {
+        setLoading(false);
       }
     }
     void loadOwners();
@@ -59,22 +65,26 @@ export function LeadCreatePage() {
   return (
     <section className="admin-page">
       <PageHeader
-        title="Lead Create"
+        title="Create lead"
         subtitle="Capture lead details manually from calls, chats, and referrals."
-        actions={<Link className="button-link button-small" to="/leads">Back To Search</Link>}
+        actions={<BackLink to="/leads" label="Back to leads" />}
       />
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
-      <LeadForm
-        title="Create Lead"
-        initialValues={{
-          ...initialValues,
-          assignedTo: isSales ? currentUsername : initialValues.assignedTo
-        }}
-        owners={owners}
-        lockAssignedTo={isSales}
-        onSubmit={handleSubmit}
-        submitLabel="Save Lead"
-      />
+      {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
+      {loading ? <LoadingState label="Preparing lead form..." /> : (
+        <LeadForm
+          title="Lead information"
+          description="Capture buyer context, ownership, and the next step for the sales pipeline."
+          initialValues={{
+            ...initialValues,
+            assignedTo: isSales ? currentUsername : initialValues.assignedTo
+          }}
+          owners={owners}
+          lockAssignedTo={isSales}
+          onSubmit={handleSubmit}
+          onCancel={() => navigate("/leads")}
+          submitLabel="Create lead"
+        />
+      )}
     </section>
   );
 }

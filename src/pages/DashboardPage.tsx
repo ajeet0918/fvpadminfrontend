@@ -1,29 +1,51 @@
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
 import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
 import ManageSearchRoundedIcon from "@mui/icons-material/ManageSearchRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import { DataTable } from "../components/DataTable";
+import {
+  ColumnChart,
+  HorizontalBarChart,
+  type ChartDataPoint
+} from "../components/OperationalCharts";
 import { PageHeader } from "../components/PageHeader";
 import { ErrorBanner, LoadingState } from "../components/PageState";
 import { StatCard } from "../components/StatCard";
+import { StatusBadge } from "../components/StatusBadge";
 import { fetchAdminProductsApi, fetchInquiriesApi, fetchLeadsApi, fetchOrdersApi, readErrorMessage } from "../lib/api";
 import { formatEnumLabel } from "../lib/formatters";
 import type { AdminProduct, Inquiry, Lead, Order } from "../types/domain";
 
-function formatMoney(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency
-  }).format(amount);
-}
+const orderStatuses: Order["status"][] = [
+  "PENDING_REVIEW",
+  "QUOTED",
+  "CONFIRMED",
+  "PROCESSING",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED"
+];
+
+type DashboardData = {
+  orders: Order[];
+  products: AdminProduct[];
+  leads: Lead[];
+  inquiries: Inquiry[];
+};
+
+const emptyDashboardData: DashboardData = {
+  orders: [],
+  products: [],
+  leads: [],
+  inquiries: []
+};
 
 export function DashboardPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [products, setProducts] = useState<AdminProduct[]>([]);
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [data, setData] = useState<DashboardData>(emptyDashboardData);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -31,16 +53,14 @@ export function DashboardPage() {
     async function loadData() {
       try {
         setLoading(true);
-        const [nextOrders, nextProducts, nextLeads, nextInquiries] = await Promise.all([
+        setErrorMessage(null);
+        const [orders, products, leads, inquiries] = await Promise.all([
           fetchOrdersApi(),
           fetchAdminProductsApi(),
           fetchLeadsApi({}),
           fetchInquiriesApi({})
         ]);
-        setOrders(nextOrders);
-        setProducts(nextProducts);
-        setLeads(nextLeads);
-        setInquiries(nextInquiries);
+        setData({ orders, products, leads, inquiries });
       } catch (error) {
         setErrorMessage(readErrorMessage(error, "Unable to load dashboard metrics."));
       } finally {
@@ -51,160 +71,264 @@ export function DashboardPage() {
     void loadData();
   }, []);
 
-  const pendingOrders = useMemo(
-    () => orders.filter((order) => order.status === "PENDING_REVIEW").length,
-    [orders]
-  );
-
-  const deliveredOrders = useMemo(
-    () => orders.filter((order) => order.status === "DELIVERED").length,
-    [orders]
-  );
-
-  const cancelledOrders = useMemo(
-    () => orders.filter((order) => order.status === "CANCELLED").length,
-    [orders]
-  );
-
-  const activeProducts = useMemo(
-    () => products.filter((product) => product.status === "ACTIVE").length,
-    [products]
-  );
-
-  const recentOrders = useMemo(
-    () => [...orders]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 6),
-    [orders]
-  );
-
-  const statusSummary = useMemo(
-    () =>
-      (["PENDING_REVIEW", "QUOTED", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] as Order["status"][]).map((status) => ({
-        status,
-        count: orders.filter((order) => order.status === status).length
-      })),
-    [orders]
-  );
-
   return (
     <section className="admin-page">
-      <PageHeader
-        title="Dashboard"
-        subtitle="Track operations, pending work, and catalog readiness from one view."
-        actions={(
-          <>
-            <Link className="button-link" to="/products/new">Create Product</Link>
-            <Link className="button-link button-link-secondary" to="/leads/new">Add Lead</Link>
-            <Link className="button-link button-link-secondary" to="/orders">Open Orders</Link>
-          </>
-        )}
-      />
-
+      <DashboardHeader />
       {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
-      {loading ? <LoadingState label="Loading dashboard..." /> : null}
-
-      {!loading ? (
-        <>
-          <div className="dashboard-stat-grid">
-            <StatCard
-              label="Total Orders"
-              value={orders.length}
-              hint={`${pendingOrders} pending review`}
-              tone={pendingOrders > 0 ? "warning" : "neutral"}
-              icon={<ShoppingCartRoundedIcon fontSize="small" />}
-            />
-            <StatCard
-              label="Leads"
-              value={leads.length}
-              hint="Open sales opportunities"
-              tone="brand"
-              icon={<CampaignRoundedIcon fontSize="small" />}
-            />
-            <StatCard
-              label="Products"
-              value={products.length}
-              hint={`${activeProducts} active catalog entries`}
-              tone="success"
-              icon={<Inventory2RoundedIcon fontSize="small" />}
-            />
-            <StatCard
-              label="Inquiries"
-              value={inquiries.length}
-              hint="Customer and partner intake"
-              tone="neutral"
-              icon={<ManageSearchRoundedIcon fontSize="small" />}
-            />
-          </div>
-
-          <div className="dashboard-highlights-grid">
-            <article className="dashboard-highlight-card">
-              <div className="dashboard-highlight-label">Delivered Orders</div>
-              <div className="dashboard-highlight-value">{deliveredOrders}</div>
-            </article>
-            <article className="dashboard-highlight-card warning">
-              <div className="dashboard-highlight-label">Pending Review</div>
-              <div className="dashboard-highlight-value">{pendingOrders}</div>
-            </article>
-            <article className="dashboard-highlight-card danger">
-              <div className="dashboard-highlight-label">Cancelled Orders</div>
-              <div className="dashboard-highlight-value">{cancelledOrders}</div>
-            </article>
-          </div>
-
-          <div className="dashboard-panels gap-6">
-            <section className="dashboard-section">
-              <div className="dashboard-section-header">
-                <h3>Recent Orders</h3>
-                <Link className="button-link button-small button-link-secondary" to="/orders">View All</Link>
-              </div>
-              <DataTable isEmpty={recentOrders.length === 0} emptyText="No orders yet.">
-                <thead>
-                  <tr>
-                    <th>Order</th>
-                    <th>Company</th>
-                    <th>Status</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentOrders.map((order) => (
-                    <tr key={order.id}>
-                      <td>
-                        <Link className="record-id-link" to={`/orders/${order.id}`}>{order.orderNumber}</Link>
-                      </td>
-                      <td>{order.companyName}</td>
-                      <td>
-                        <span className={`status-pill ${statusToneClass(order.status)}`}>{formatEnumLabel(order.status)}</span>
-                      </td>
-                      <td>{order.totalAmount === null ? "Pending quote" : formatMoney(order.totalAmount, order.currency)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </DataTable>
-            </section>
-
-            <section className="dashboard-section">
-              <h3 className="mb-4">Status Summary</h3>
-              <div className="dashboard-status-grid">
-                {statusSummary.map(({ status, count }) => (
-                  <article key={status} className={`dashboard-status-card ${statusToneClass(status)}`}>
-                    <div className="dashboard-status-label">{formatEnumLabel(status)}</div>
-                    <div className="dashboard-status-value">{count}</div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          </div>
-        </>
-      ) : null}
+      {loading ? <LoadingState label="Loading dashboard..." /> : <DashboardContent data={data} />}
     </section>
   );
 }
 
-function statusToneClass(status: Order["status"]) {
-  if (status === "DELIVERED") return "status-pill-success";
-  if (status === "CANCELLED") return "status-pill-danger";
-  if (status === "PENDING_REVIEW" || status === "PROCESSING") return "status-pill-warning";
-  return "status-pill-neutral";
+function DashboardHeader() {
+  return (
+    <PageHeader
+      title="Operations dashboard"
+      subtitle="Monitor order flow, sales workload, catalog readiness, and work requiring attention."
+      actions={(
+        <>
+          <Link className="button-link" to="/orders">
+            Review orders
+            <ArrowForwardRoundedIcon fontSize="small" />
+          </Link>
+          <Link className="button-link button-link-secondary" to="/products/new">
+            <AddRoundedIcon fontSize="small" />
+            Add product
+          </Link>
+        </>
+      )}
+    />
+  );
+}
+
+function DashboardContent({ data }: { data: DashboardData }) {
+  const metrics = useMemo(() => getDashboardMetrics(data), [data]);
+  const orderActivity = useMemo(() => getRecentOrderActivity(data.orders), [data.orders]);
+  const orderDistribution = useMemo(() => getOrderDistribution(data.orders), [data.orders]);
+  const recentOrders = useMemo(() => getRecentOrders(data.orders), [data.orders]);
+
+  return (
+    <>
+      <DashboardMetricCards metrics={metrics} />
+      <div className="dashboard-primary-grid">
+        <ChartPanel title="Order activity" description="Orders created during the last seven days.">
+          <ColumnChart
+            data={orderActivity}
+            emptyText="New orders will appear here as they are created."
+            ariaLabel="Orders created during the last seven days"
+          />
+        </ChartPanel>
+        <WorkQueue metrics={metrics} />
+      </div>
+      <div className="dashboard-secondary-grid">
+        <RecentOrders orders={recentOrders} />
+        <ChartPanel title="Order lifecycle" description="Current distribution across fulfilment stages.">
+          <HorizontalBarChart
+            data={orderDistribution}
+            emptyText="Order stages will appear after the first order is placed."
+            ariaLabel="Current orders grouped by lifecycle status"
+          />
+        </ChartPanel>
+      </div>
+    </>
+  );
+}
+
+type DashboardMetrics = {
+  openOrders: number;
+  pendingReview: number;
+  activeProducts: number;
+  inactiveProducts: number;
+  activeLeads: number;
+  qualifiedLeads: number;
+  openInquiries: number;
+  unassignedInquiries: number;
+};
+
+function DashboardMetricCards({ metrics }: { metrics: DashboardMetrics }) {
+  return (
+    <div className="dashboard-stat-grid">
+      <StatCard
+        label="Open orders"
+        value={metrics.openOrders}
+        hint={`${metrics.pendingReview} waiting for review`}
+        tone={metrics.pendingReview > 0 ? "warning" : "neutral"}
+        icon={<ShoppingCartRoundedIcon fontSize="small" />}
+      />
+      <StatCard
+        label="Active leads"
+        value={metrics.activeLeads}
+        hint={`${metrics.qualifiedLeads} qualified opportunities`}
+        tone="brand"
+        icon={<CampaignRoundedIcon fontSize="small" />}
+      />
+      <StatCard
+        label="Active products"
+        value={metrics.activeProducts}
+        hint={`${metrics.inactiveProducts} inactive catalog entries`}
+        tone="success"
+        icon={<Inventory2RoundedIcon fontSize="small" />}
+      />
+      <StatCard
+        label="Open inquiries"
+        value={metrics.openInquiries}
+        hint={`${metrics.unassignedInquiries} need an owner`}
+        tone={metrics.unassignedInquiries > 0 ? "warning" : "neutral"}
+        icon={<ManageSearchRoundedIcon fontSize="small" />}
+      />
+    </div>
+  );
+}
+
+function WorkQueue({ metrics }: { metrics: DashboardMetrics }) {
+  const items = [
+    { label: "Orders waiting for review", value: metrics.pendingReview, to: "/orders" },
+    { label: "Unassigned inquiries", value: metrics.unassignedInquiries, to: "/inquiries" },
+    { label: "Qualified leads", value: metrics.qualifiedLeads, to: "/leads" },
+    { label: "Inactive products", value: metrics.inactiveProducts, to: "/products" }
+  ];
+
+  return (
+    <section className="dashboard-panel">
+      <PanelHeader title="Work queue" description="Records that may need action from the operations team." />
+      <div className="work-queue-list">
+        {items.map((item) => (
+          <Link className="work-queue-item" to={item.to} key={item.label}>
+            <span>{item.label}</span>
+            <strong>{item.value}</strong>
+            <ArrowForwardRoundedIcon fontSize="small" />
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RecentOrders({ orders }: { orders: Order[] }) {
+  return (
+    <section className="dashboard-panel dashboard-recent-orders">
+      <PanelHeader
+        title="Recent orders"
+        description="Latest buyer orders and their current state."
+        action={<Link className="text-action-link" to="/orders">View all orders</Link>}
+      />
+      <DataTable isEmpty={orders.length === 0} emptyText="No orders have been created yet." className="dashboard-table">
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Buyer</th>
+            <th>Status</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map((order) => (
+            <tr key={order.id}>
+              <td><Link className="record-id-link" to={`/orders/${order.id}`}>{order.orderNumber}</Link></td>
+              <td>{order.companyName || order.fullName}</td>
+              <td><StatusBadge label={formatEnumLabel(order.status)} tone={getStatusTone(order.status)} /></td>
+              <td>{order.totalAmount === null ? "Pending quote" : formatMoney(order.totalAmount, order.currency)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </DataTable>
+    </section>
+  );
+}
+
+function ChartPanel({ title, description, children }: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="dashboard-panel">
+      <PanelHeader title={title} description={description} />
+      {children}
+    </section>
+  );
+}
+
+function PanelHeader({ title, description, action }: {
+  title: string;
+  description: string;
+  action?: ReactNode;
+}) {
+  return (
+    <header className="dashboard-panel-header">
+      <div>
+        <h2>{title}</h2>
+        <p>{description}</p>
+      </div>
+      {action}
+    </header>
+  );
+}
+
+function getDashboardMetrics(data: DashboardData): DashboardMetrics {
+  return {
+    openOrders: data.orders.filter((order) => !["DELIVERED", "CANCELLED"].includes(order.status)).length,
+    pendingReview: data.orders.filter((order) => order.status === "PENDING_REVIEW").length,
+    activeProducts: data.products.filter((product) => product.status === "ACTIVE").length,
+    inactiveProducts: data.products.filter((product) => product.status === "INACTIVE").length,
+    activeLeads: data.leads.filter((lead) => !["DISQUALIFIED", "CONVERTED", "CLOSED"].includes(lead.status)).length,
+    qualifiedLeads: data.leads.filter((lead) => lead.status === "QUALIFIED").length,
+    openInquiries: data.inquiries.filter((inquiry) => !["CONVERTED", "CLOSED"].includes(inquiry.status)).length,
+    unassignedInquiries: data.inquiries.filter(
+      (inquiry) => !["CONVERTED", "CLOSED"].includes(inquiry.status) && !inquiry.assignedTo
+    ).length
+  };
+}
+
+function getRecentOrders(orders: Order[]) {
+  return [...orders]
+    .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())
+    .slice(0, 6);
+}
+
+function getRecentOrderActivity(orders: Order[]): ChartDataPoint[] {
+  const today = startOfDay(new Date());
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (6 - index));
+    const nextDate = new Date(date);
+    nextDate.setDate(date.getDate() + 1);
+    return {
+      label: date.toLocaleDateString("en-IN", { weekday: "short" }),
+      value: orders.filter((order) => {
+        const createdAt = new Date(order.createdAt);
+        return createdAt >= date && createdAt < nextDate;
+      }).length
+    };
+  });
+}
+
+function getOrderDistribution(orders: Order[]): ChartDataPoint[] {
+  return orderStatuses.map((status) => ({
+    label: formatEnumLabel(status),
+    value: orders.filter((order) => order.status === status).length,
+    tone: getChartTone(status)
+  }));
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function formatMoney(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(amount);
+}
+
+function getStatusTone(status: Order["status"]) {
+  if (status === "DELIVERED") return "success";
+  if (status === "CANCELLED") return "danger";
+  if (status === "PENDING_REVIEW" || status === "PROCESSING") return "warning";
+  return "neutral";
+}
+
+function getChartTone(status: Order["status"]): ChartDataPoint["tone"] {
+  if (status === "DELIVERED") return "success";
+  if (status === "CANCELLED") return "danger";
+  if (status === "PENDING_REVIEW" || status === "PROCESSING") return "warning";
+  return "brand";
 }

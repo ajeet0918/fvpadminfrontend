@@ -1,6 +1,9 @@
 import { type FormEvent, useEffect, useState } from "react";
+import LockResetRoundedIcon from "@mui/icons-material/LockResetRounded";
 import type { AdminRole } from "../types/domain";
+import { FormActions } from "./FormActions";
 import { FormSection } from "./FormSection";
+import { ErrorBanner } from "./PageState";
 
 export type UserFormValues = {
   username: string;
@@ -15,6 +18,7 @@ export type UserFormValues = {
 
 type UserFormProps = {
   title: string;
+  description?: string;
   roles: AdminRole[];
   initialValues: UserFormValues;
   loading?: boolean;
@@ -30,6 +34,7 @@ type UserFormProps = {
 
 export function UserForm({
   title,
+  description,
   roles,
   initialValues,
   loading = false,
@@ -45,6 +50,7 @@ export function UserForm({
   const [values, setValues] = useState<UserFormValues>(initialValues);
   const [resetPasswordValue, setResetPasswordValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,33 +72,54 @@ export function UserForm({
     }
   }
 
+  async function handleResetPassword() {
+    if (!onResetPassword || resetPasswordValue.length < 8) return;
+
+    setResettingPassword(true);
+    setErrorMessage(null);
+    try {
+      await onResetPassword(resetPasswordValue);
+      setResetPasswordValue("");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to reset password.");
+    } finally {
+      setResettingPassword(false);
+    }
+  }
+
   return (
-    <article className="admin-form-card module-form-scroll">
-      <h3 className="m-0 text-lg font-semibold text-text-primary">{title}</h3>
-      <form className="mt-3 grid gap-4" onSubmit={handleSubmit}>
-        <FormSection title="Profile">
+    <article className="admin-form-card form-page-card">
+      <header className="form-card-header">
+        <h2>{title}</h2>
+        {description ? <p>{description}</p> : null}
+      </header>
+      <form className="admin-edit-form" onSubmit={handleSubmit} aria-busy={submitting}>
+        <FormSection title="Account profile" subtitle="Identity and contact details for the operations user.">
           <div className="form-grid-2">
             <label>
               Username
               <input
                 required
                 disabled={!showPassword}
+                autoComplete="username"
                 value={values.username}
                 onChange={(event) => setValues((current) => ({ ...current, username: event.target.value }))}
               />
             </label>
             <label>
-              First Name
+              First name
               <input
                 required
+                autoComplete="given-name"
                 value={values.firstName}
                 onChange={(event) => setValues((current) => ({ ...current, firstName: event.target.value }))}
               />
             </label>
             <label>
-              Last Name
+              Last name
               <input
                 required
+                autoComplete="family-name"
                 value={values.lastName}
                 onChange={(event) => setValues((current) => ({ ...current, lastName: event.target.value }))}
               />
@@ -102,6 +129,7 @@ export function UserForm({
               <input
                 required
                 type="email"
+                autoComplete="email"
                 value={values.email}
                 onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
               />
@@ -109,6 +137,8 @@ export function UserForm({
             <label>
               Phone
               <input
+                type="tel"
+                autoComplete="tel"
                 value={values.phone}
                 onChange={(event) => setValues((current) => ({ ...current, phone: event.target.value }))}
               />
@@ -123,30 +153,32 @@ export function UserForm({
                 <option value="">Select role</option>
                 {roles.map((role) => (
                   <option key={role.id} value={role.code}>
-                    {role.code}
+                    {role.name} ({role.code})
                   </option>
                 ))}
               </select>
             </label>
           </div>
 
-          <label className="inline-checkbox mt-3">
+          <label className="inline-checkbox mt-4">
             <input
               type="checkbox"
               checked={values.active}
               onChange={(event) => setValues((current) => ({ ...current, active: event.target.checked }))}
             />
-            Active
+            User can sign in
           </label>
         </FormSection>
 
         {showPassword ? (
-          <FormSection title="Password">
+          <FormSection title="Initial password" subtitle="The user should replace this password according to your account policy.">
             <label>
               Password
               <input
                 required
                 type="password"
+                minLength={8}
+                autoComplete="new-password"
                 value={values.password}
                 onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
               />
@@ -155,46 +187,43 @@ export function UserForm({
         ) : null}
 
         {showResetPassword && onResetPassword ? (
-          <FormSection title="Reset Password">
+          <FormSection title="Reset password" subtitle="Set a temporary password without changing profile or role details.">
             <div className="reset-password-box">
               <label>
-                New Password
+                Temporary password
                 <input
                   type="password"
+                  minLength={8}
+                  autoComplete="new-password"
                   value={resetPasswordValue}
                   onChange={(event) => setResetPasswordValue(event.target.value)}
-                  placeholder="Enter new password"
+                  placeholder="At least 8 characters"
                 />
               </label>
               <button
                 type="button"
                 className="button-link button-link-secondary w-fit"
-                disabled={!resetPasswordValue || resetPasswordValue.length < 8}
-                onClick={() => void onResetPassword(resetPasswordValue)}
+                disabled={resettingPassword || resetPasswordValue.length < 8}
+                onClick={() => void handleResetPassword()}
               >
-                Update Password
+                <LockResetRoundedIcon fontSize="small" />
+                {resettingPassword ? "Updating..." : "Update password"}
               </button>
             </div>
           </FormSection>
         ) : null}
 
-        {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
+        {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
 
-        <div className="form-actions">
-          <button type="submit" className="button-link" disabled={submitting || loading}>
-            {submitting ? "Saving..." : submitLabel}
-          </button>
-          {onCancel ? (
-            <button type="button" className="button-link button-link-secondary" onClick={onCancel}>
-              Cancel
-            </button>
-          ) : null}
-          {onDeactivateOrDelete ? (
-            <button type="button" className="button-link button-danger" onClick={() => void onDeactivateOrDelete()}>
-              {deactivateLabel}
-            </button>
-          ) : null}
-        </div>
+        <FormActions
+          submitLabel={submitLabel}
+          submitting={submitting}
+          disabled={loading || resettingPassword}
+          onCancel={onCancel}
+          dangerAction={onDeactivateOrDelete
+            ? { label: deactivateLabel, onClick: () => void onDeactivateOrDelete() }
+            : undefined}
+        />
       </form>
     </article>
   );
