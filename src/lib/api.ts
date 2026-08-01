@@ -99,6 +99,19 @@ export async function updateOrderStatusApi(orderId: number, payload: { status: O
   return response.data;
 }
 
+export async function createOrderRefundApi(orderId: number, payload: { amount: number; note: string }) {
+  const response = await apiClient.post(`/orders/${orderId}/refunds`, {
+    ...payload,
+    speed: "STANDARD"
+  });
+  return response.data;
+}
+
+export async function syncOrderRefundsApi(orderId: number) {
+  const response = await apiClient.post(`/orders/${orderId}/refunds/sync`);
+  return response.data;
+}
+
 export async function fetchAdminRolesApi() {
   const response = await apiClient.get<AdminRole[]>("/admin/roles");
   return response.data;

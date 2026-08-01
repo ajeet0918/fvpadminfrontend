@@ -20,6 +20,14 @@ const statusOptions: Array<Order["status"] | "ALL"> = [
   "CANCELLED"
 ];
 
+const paymentOptions: Array<Order["paymentStatus"] | "ALL"> = [
+  "ALL",
+  "NOT_INITIATED",
+  "PENDING",
+  "PAID",
+  "FAILED"
+];
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 }
@@ -37,6 +45,7 @@ export function OrdersPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<(typeof statusOptions)[number]>("ALL");
+  const [paymentFilter, setPaymentFilter] = useState<(typeof paymentOptions)[number]>("ALL");
 
   const loadOrders = useCallback(async () => {
     try {
@@ -58,6 +67,7 @@ export function OrdersPage() {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     return orders
       .filter((order) => statusFilter === "ALL" || order.status === statusFilter)
+      .filter((order) => paymentFilter === "ALL" || order.paymentStatus === paymentFilter)
       .filter((order) => {
         if (!normalizedSearch) return true;
         return (
@@ -67,12 +77,19 @@ export function OrdersPage() {
         );
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [orders, searchTerm, statusFilter]);
+  }, [orders, paymentFilter, searchTerm, statusFilter]);
 
   function getStatusTone(status: Order["status"]) {
     if (status === "PENDING_REVIEW" || status === "PROCESSING") return "warning";
     if (status === "CANCELLED") return "danger";
     return "success";
+  }
+
+  function getPaymentTone(status: Order["paymentStatus"]) {
+    if (status === "PAID") return "success";
+    if (status === "FAILED") return "danger";
+    if (status === "PENDING") return "warning";
+    return "neutral";
   }
 
   return (
@@ -107,6 +124,16 @@ export function OrdersPage() {
             ))}
           </select>
         </label>
+        <label>
+          Payment
+          <select value={paymentFilter} onChange={(event) => setPaymentFilter(event.target.value as (typeof paymentOptions)[number])}>
+            {paymentOptions.map((status) => (
+              <option key={status} value={status}>
+                {status === "ALL" ? "All Payments" : formatEnumLabel(status)}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
@@ -119,6 +146,7 @@ export function OrdersPage() {
               <th>ID</th>
               <th>Name</th>
               <th>Status</th>
+              <th>Payment</th>
               <th>Date</th>
               <th>Amount</th>
               <th className="text-right">Actions</th>
@@ -135,6 +163,12 @@ export function OrdersPage() {
                 <td>{order.companyName || order.fullName}</td>
                 <td>
                   <StatusBadge label={formatEnumLabel(order.status)} tone={getStatusTone(order.status)} />
+                </td>
+                <td>
+                  <StatusBadge
+                    label={formatEnumLabel(order.paymentStatus ?? "NOT_INITIATED")}
+                    tone={getPaymentTone(order.paymentStatus ?? "NOT_INITIATED")}
+                  />
                 </td>
                 <td>{formatDate(order.createdAt)}</td>
                 <td>{order.totalAmount === null ? "Pending quote" : formatMoney(order.totalAmount, order.currency)}</td>
