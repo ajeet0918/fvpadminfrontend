@@ -7,6 +7,35 @@ export type OrderStatus =
   | "DELIVERED"
   | "CANCELLED";
 
+export type OrderPaymentStatus = "NOT_INITIATED" | "PENDING" | "PAID" | "FAILED";
+
+export type OrderRefundStatus = "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED" | "ONHOLD";
+
+export type OrderRefund = {
+  id: number;
+  refundId: string;
+  providerRefundId: string | null;
+  providerPaymentId: string | null;
+  amount: number;
+  currency: string;
+  status: OrderRefundStatus;
+  speed: string;
+  note: string;
+  statusDescription: string | null;
+  refundArn: string | null;
+  requestedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  processedAt: string | null;
+};
+
+export type OrderRefundSummary = {
+  status: "NOT_REQUESTED" | "PENDING" | "ON_HOLD" | "PARTIALLY_REFUNDED" | "REFUNDED" | "FAILED" | "CANCELLED";
+  refundedAmount: number;
+  pendingAmount: number;
+  refundableAmount: number;
+};
+
 export type OrderItem = {
   id: number;
   productId: number | null;
@@ -45,6 +74,14 @@ export type Order = {
   customerNotes: string;
   status: OrderStatus;
   currency: string;
+  paymentStatus: OrderPaymentStatus;
+  paymentDueAmount: number | null;
+  paymentProvider: string | null;
+  paymentProviderOrderId: string | null;
+  paymentProviderReference: string | null;
+  paidAt: string | null;
+  refundSummary?: OrderRefundSummary;
+  refunds?: OrderRefund[];
   createdAt: string;
   quotedAt: string | null;
   confirmedAt: string | null;

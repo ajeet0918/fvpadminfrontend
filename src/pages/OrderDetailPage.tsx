@@ -2,13 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
 import { ErrorBanner, LoadingState } from "../components/PageState";
+import { RefundDialog } from "../components/RefundDialog";
+import { StatusBadge } from "../components/StatusBadge";
 import {
+  createOrderRefundApi,
   fetchOrderApi,
   quoteOrderApi,
   readErrorMessage,
+  syncOrderRefundsApi,
   updateOrderStatusApi
 } from "../lib/api";
 import { formatEnumLabel } from "../lib/formatters";
+import { getCurrentRole } from "../lib/auth";
 import type { Order, OrderStatus } from "../types/domain";
 
 function formatCurrency(value: number | null, currency = "INR") {
@@ -22,7 +27,10 @@ export function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [syncingRefunds, setSyncingRefunds] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [refundError, setRefundError] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState("");
   const [shippingAmount, setShippingAmount] = useState("0");
   const [taxAmountOverride, setTaxAmountOverride] = useState("");
@@ -111,8 +119,51 @@ export function OrderDetailPage() {
     }
   }
 
+  async function createRefund(amount: number, note: string) {
+    if (!order) return;
+    setActionLoading(true);
+    setRefundError(null);
+    try {
+      await createOrderRefundApi(order.id, { amount, note });
+      setRefundDialogOpen(false);
+      await loadOrder();
+    } catch (error) {
+      setRefundError(readErrorMessage(error, "Unable to issue refund."));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function syncRefunds() {
+    if (!order) return;
+    setSyncingRefunds(true);
+    setErrorMessage(null);
+    try {
+      await syncOrderRefundsApi(order.id);
+      await loadOrder();
+    } catch (error) {
+      setErrorMessage(readErrorMessage(error, "Unable to sync refunds from Cashfree."));
+    } finally {
+      setSyncingRefunds(false);
+    }
+  }
+
   if (loading) return <LoadingState label="Loading order..." />;
   if (!order) return <ErrorBanner message="Order not found." />;
+
+  const paymentStatus = order.paymentStatus ?? "NOT_INITIATED";
+  const refundSummary = order.refundSummary ?? {
+    status: "NOT_REQUESTED" as const,
+    refundedAmount: 0,
+    pendingAmount: 0,
+    refundableAmount: paymentStatus === "PAID" ? (order.paymentDueAmount ?? order.totalAmount ?? 0) : 0
+  };
+  const refunds = order.refunds ?? [];
+  const canManageRefunds = ["ADMIN", "SYSADMIN"].includes(getCurrentRole());
+  const canRefund = paymentStatus === "PAID"
+    && order.paymentProvider === "CASHFREE"
+    && refundSummary.refundableAmount > 0
+    && canManageRefunds;
 
   return (
     <section className="admin-page">
@@ -125,8 +176,74 @@ export function OrderDetailPage() {
 
       <div className="order-summary-grid">
         <div><span>Status</span><strong>{formatEnumLabel(order.status)}</strong></div>
+        <div><span>Payment</span><strong>{formatEnumLabel(paymentStatus)}</strong></div>
         <div><span>Company</span><strong>{order.companyName}</strong></div>
         <div><span>Total</span><strong>{formatCurrency(order.totalAmount, order.currency)}</strong></div>
+      </div>
+
+      <div className="admin-form-card payment-management-card">
+        <div className="section-heading-row">
+          <div>
+            <h3>Payment and refunds</h3>
+            <p>Payment confirmation and refund progress are tracked separately from fulfilment.</p>
+          </div>
+          <div className="payment-badge-group">
+            <StatusBadge label={`Payment ${formatEnumLabel(paymentStatus)}`} tone={paymentStatus === "PAID" ? "success" : paymentStatus === "FAILED" ? "danger" : "warning"} />
+            {refundSummary.status !== "NOT_REQUESTED" ? (
+              <StatusBadge
+                label={formatEnumLabel(refundSummary.status)}
+                tone={refundSummary.status === "REFUNDED" ? "success" : refundSummary.status === "FAILED" ? "danger" : "warning"}
+              />
+            ) : null}
+          </div>
+        </div>
+
+        <div className="order-summary-grid payment-summary-grid">
+          <div><span>Paid amount</span><strong>{formatCurrency(paymentStatus === "PAID" ? order.paymentDueAmount ?? order.totalAmount : null, order.currency)}</strong></div>
+          <div><span>Refunded</span><strong>{formatCurrency(refundSummary.refundedAmount, order.currency)}</strong></div>
+          <div><span>Refund pending</span><strong>{formatCurrency(refundSummary.pendingAmount, order.currency)}</strong></div>
+          <div><span>Available to refund</span><strong>{formatCurrency(refundSummary.refundableAmount, order.currency)}</strong></div>
+        </div>
+
+        <dl className="payment-reference-list">
+          <div><dt>Provider</dt><dd>{order.paymentProvider ?? "Not initiated"}</dd></div>
+          <div><dt>Paid on</dt><dd>{order.paidAt ? new Date(order.paidAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "Not paid"}</dd></div>
+          <div><dt>Payment reference</dt><dd>{order.paymentProviderReference ?? "Not available"}</dd></div>
+        </dl>
+
+        <div className="payment-actions">
+          {paymentStatus === "PAID" && order.paymentProvider === "CASHFREE" && canManageRefunds ? (
+            <button type="button" className="button-link button-link-secondary" disabled={syncingRefunds || actionLoading} onClick={() => void syncRefunds()}>
+              {syncingRefunds ? "Syncing..." : "Sync with Cashfree"}
+            </button>
+          ) : null}
+          {canRefund ? (
+            <button type="button" className="button-link button-danger" onClick={() => { setRefundError(null); setRefundDialogOpen(true); }}>
+              Issue refund
+            </button>
+          ) : null}
+        </div>
+        {paymentStatus === "PAID" && order.status === "CANCELLED" && canRefund ? (
+          <p className="payment-guidance">This order is cancelled, but its payment remains paid until a refund is issued.</p>
+        ) : null}
+
+        {refunds.length > 0 ? (
+          <div className="refund-history">
+            <h4>Refund history</h4>
+            {refunds.map((refund) => (
+              <div className="refund-history-row" key={refund.refundId}>
+                <div>
+                  <strong>{formatCurrency(refund.amount, refund.currency)}</strong>
+                  <span>{refund.note}</span>
+                </div>
+                <div>
+                  <StatusBadge label={formatEnumLabel(refund.status)} tone={refund.status === "SUCCESS" ? "success" : refund.status === "FAILED" || refund.status === "CANCELLED" ? "danger" : "warning"} />
+                  <small>{new Date(refund.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</small>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="admin-form-card">
@@ -224,6 +341,17 @@ export function OrderDetailPage() {
           ))}
         </div>
       </div>
+
+      <RefundDialog
+        open={refundDialogOpen}
+        orderNumber={order.orderNumber}
+        currency={order.currency}
+        refundableAmount={refundSummary.refundableAmount}
+        busy={actionLoading}
+        errorMessage={refundError}
+        onConfirm={(amount, note) => void createRefund(amount, note)}
+        onCancel={() => { if (!actionLoading) setRefundDialogOpen(false); }}
+      />
     </section>
   );
 }

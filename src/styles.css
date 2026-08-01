@@ -786,6 +786,136 @@
     @apply grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3;
   }
 
+  .section-heading-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .section-heading-row p {
+    margin: 4px 0 0;
+    color: #6b7280;
+  }
+
+  .payment-badge-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .payment-summary-grid {
+    margin-top: 20px;
+  }
+
+  .payment-reference-list {
+    @apply grid grid-cols-1 md:grid-cols-3;
+    gap: 12px;
+    margin: 18px 0;
+  }
+
+  .payment-reference-list div {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #f9fafb;
+  }
+
+  .payment-reference-list dt {
+    color: #6b7280;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .payment-reference-list dd {
+    margin: 5px 0 0;
+    overflow-wrap: anywhere;
+    font-weight: 700;
+  }
+
+  .payment-guidance,
+  .refund-dialog-note {
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+
+  .payment-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .refund-history {
+    margin-top: 22px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 18px;
+  }
+
+  .refund-history-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .refund-history-row > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .refund-history-row > div:last-child {
+    align-items: flex-end;
+  }
+
+  .refund-history-row span,
+  .refund-history-row small {
+    color: #6b7280;
+  }
+
+  .refund-dialog {
+    width: min(520px, calc(100vw - 32px));
+  }
+
+  .refund-dialog-fields {
+    display: grid;
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .refund-dialog-fields label {
+    display: grid;
+    gap: 7px;
+    font-weight: 700;
+  }
+
+  .refund-dialog-fields input,
+  .refund-dialog-fields textarea {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font: inherit;
+  }
+
+  .refund-dialog-fields small {
+    color: #6b7280;
+    font-weight: 400;
+  }
+
+  .refund-dialog-error {
+    margin: 0;
+    color: #dc2626;
+    font-weight: 700;
+  }
+
   .form-actions {
     @apply flex flex-wrap items-center gap-2;
   }
