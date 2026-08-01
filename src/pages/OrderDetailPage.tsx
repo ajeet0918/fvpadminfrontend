@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import UpdateRoundedIcon from "@mui/icons-material/UpdateRounded";
+import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { PageHeader } from "../components/PageHeader";
 import { ErrorBanner, LoadingState } from "../components/PageState";
 import { RefundDialog } from "../components/RefundDialog";
@@ -15,6 +17,33 @@ import {
 import { formatEnumLabel } from "../lib/formatters";
 import { getCurrentRole } from "../lib/auth";
 import type { Order, OrderStatus } from "../types/domain";
+
+const ORDER_STATUS_OPTIONS: OrderStatus[] = [
+  "PENDING_REVIEW",
+  "QUOTED",
+  "CONFIRMED",
+  "PROCESSING",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED"
+];
+
+const ORDER_STATUS_DESCRIPTIONS: Record<OrderStatus, string> = {
+  PENDING_REVIEW: "Order details are awaiting review by the operations team.",
+  QUOTED: "Pricing has been prepared and shared with the customer.",
+  CONFIRMED: "The order is approved and ready for fulfilment planning.",
+  PROCESSING: "The order is being prepared, packed, or coordinated for dispatch.",
+  SHIPPED: "The order has left the fulfilment location and is in transit.",
+  DELIVERED: "The order has reached the customer and fulfilment is complete.",
+  CANCELLED: "Fulfilment will stop. Any paid amount must be refunded separately."
+};
+
+function getOrderStatusTone(status: OrderStatus) {
+  if (status === "DELIVERED") return "success" as const;
+  if (status === "CANCELLED") return "danger" as const;
+  if (["PENDING_REVIEW", "QUOTED"].includes(status)) return "warning" as const;
+  return "neutral" as const;
+}
 
 function formatCurrency(value: number | null, currency = "INR") {
   if (value === null || Number.isNaN(value)) return "Pending";
@@ -32,6 +61,8 @@ export function OrderDetailPage() {
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
   const [refundError, setRefundError] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus>("PENDING_REVIEW");
+  const [cancelConfirmationOpen, setCancelConfirmationOpen] = useState(false);
   const [shippingAmount, setShippingAmount] = useState("0");
   const [taxAmountOverride, setTaxAmountOverride] = useState("");
   const [discountAmountOverride, setDiscountAmountOverride] = useState("");
@@ -54,6 +85,7 @@ export function OrderDetailPage() {
       setLoading(true);
       const nextOrder = await fetchOrderApi(orderId);
       setOrder(nextOrder);
+      setSelectedStatus(nextOrder.status);
       setStatusNote(nextOrder.adminNotes ?? "");
       setShippingAmount(String(nextOrder.shippingAmount ?? 0));
       setTaxAmountOverride(nextOrder.taxAmount !== null ? String(nextOrder.taxAmount) : "");
@@ -111,12 +143,23 @@ export function OrderDetailPage() {
     setErrorMessage(null);
     try {
       await updateOrderStatusApi(order.id, { status, adminNotes: statusNote });
+      setCancelConfirmationOpen(false);
       await loadOrder();
     } catch (error) {
+      setCancelConfirmationOpen(false);
       setErrorMessage(readErrorMessage(error, "Unable to update status."));
     } finally {
       setActionLoading(false);
     }
+  }
+
+  function submitStatusUpdate() {
+    if (!order || selectedStatus === order.status) return;
+    if (selectedStatus === "CANCELLED") {
+      setCancelConfirmationOpen(true);
+      return;
+    }
+    void updateStatus(selectedStatus);
   }
 
   async function createRefund(amount: number, note: string) {
@@ -327,18 +370,84 @@ export function OrderDetailPage() {
         </button>
       </div>
 
-      <div className="admin-form-card">
-        <h3>Status</h3>
-        <label>
-          Admin Note
-          <textarea rows={3} value={statusNote} onChange={(event) => setStatusNote(event.target.value)} />
-        </label>
-        <div className="status-actions">
-          {(["CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] as OrderStatus[]).map((status) => (
-            <button key={status} type="button" className="button-link button-link-secondary button-small" onClick={() => void updateStatus(status)} disabled={actionLoading}>
-              {formatEnumLabel(status)}
-            </button>
-          ))}
+      <div className="admin-form-card order-status-card">
+        <div className="section-heading-row">
+          <div>
+            <h3>Order status</h3>
+            <p>Update fulfilment progress and leave an internal note for the operations team.</p>
+          </div>
+          <StatusBadge label={formatEnumLabel(order.status)} tone={getOrderStatusTone(order.status)} />
+        </div>
+
+        <div className="order-status-layout">
+          <div className="order-status-editor">
+            <label>
+              Change order status
+              <select
+                value={selectedStatus}
+                disabled={actionLoading}
+                onChange={(event) => setSelectedStatus(event.target.value as OrderStatus)}
+              >
+                {ORDER_STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {formatEnumLabel(status)}{status === order.status ? " (Current)" : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <p className={`order-status-guidance${selectedStatus === "CANCELLED" ? " order-status-guidance-danger" : ""}`}>
+              {ORDER_STATUS_DESCRIPTIONS[selectedStatus]}
+            </p>
+
+            <label>
+              Internal note
+              <textarea
+                rows={3}
+                value={statusNote}
+                disabled={actionLoading}
+                onChange={(event) => setStatusNote(event.target.value)}
+                placeholder="Add delivery, fulfilment, or customer communication details"
+              />
+            </label>
+
+            <div className="status-update-actions">
+              <button
+                type="button"
+                className={selectedStatus === "CANCELLED" ? "button-link button-danger" : "button-link"}
+                disabled={actionLoading || selectedStatus === order.status}
+                onClick={submitStatusUpdate}
+              >
+                <UpdateRoundedIcon fontSize="small" />
+                {actionLoading ? "Updating..." : "Update status"}
+              </button>
+            </div>
+          </div>
+
+          <div className="order-status-history" aria-label="Recent status activity">
+            <div className="order-status-history-heading">
+              <h4>Recent activity</h4>
+              <span>{order.statusHistory.length} updates</span>
+            </div>
+            {order.statusHistory.length > 0 ? (
+              <ol className="order-status-timeline">
+                {order.statusHistory.slice(0, 5).map((history, index) => (
+                  <li key={`${history.status}-${history.changedAt}-${index}`}>
+                    <span className="order-status-timeline-marker" aria-hidden="true" />
+                    <div>
+                      <strong>{formatEnumLabel(history.status)}</strong>
+                      <time dateTime={history.changedAt}>
+                        {new Date(history.changedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                      </time>
+                      {history.note ? <p>{history.note}</p> : null}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="order-status-empty">No status updates have been recorded.</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -351,6 +460,15 @@ export function OrderDetailPage() {
         errorMessage={refundError}
         onConfirm={(amount, note) => void createRefund(amount, note)}
         onCancel={() => { if (!actionLoading) setRefundDialogOpen(false); }}
+      />
+      <ConfirmationDialog
+        open={cancelConfirmationOpen}
+        title="Cancel this order?"
+        message="This stops fulfilment but does not refund a paid order. Payment refunds must be issued separately."
+        confirmLabel="Cancel order"
+        busy={actionLoading}
+        onConfirm={() => void updateStatus("CANCELLED")}
+        onCancel={() => setCancelConfirmationOpen(false)}
       />
     </section>
   );

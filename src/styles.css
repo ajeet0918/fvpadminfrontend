@@ -786,6 +786,77 @@
     @apply grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3;
   }
 
+  .order-status-layout {
+    @apply mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)];
+  }
+
+  .order-status-editor {
+    @apply grid content-start gap-4;
+  }
+
+  .order-status-guidance {
+    @apply m-0 border-l-4 border-brand bg-brand-light px-3 py-2 text-sm leading-6 text-text-secondary;
+  }
+
+  .order-status-guidance-danger {
+    @apply border-danger bg-red-50 text-red-800;
+  }
+
+  .status-update-actions {
+    @apply flex justify-end border-t border-border pt-4;
+  }
+
+  .status-update-actions .button-link {
+    @apply min-w-40 justify-center;
+  }
+
+  .order-status-history {
+    @apply min-w-0 border-t border-border pt-5 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0;
+  }
+
+  .order-status-history-heading {
+    @apply flex items-center justify-between gap-3;
+  }
+
+  .order-status-history-heading span {
+    @apply text-xs font-medium text-text-secondary;
+  }
+
+  .order-status-timeline {
+    @apply m-0 mt-4 grid list-none gap-0 p-0;
+  }
+
+  .order-status-timeline li {
+    @apply relative grid min-h-20 grid-cols-[1rem_minmax(0,1fr)] gap-3 pb-4;
+  }
+
+  .order-status-timeline li:not(:last-child)::before {
+    content: "";
+    @apply absolute bottom-0 left-[0.4375rem] top-4 w-px bg-border;
+  }
+
+  .order-status-timeline-marker {
+    @apply relative z-[1] mt-1 h-4 w-4 rounded-full border-4 border-brand-light bg-brand;
+  }
+
+  .order-status-timeline strong,
+  .order-status-timeline time {
+    @apply block;
+  }
+
+  .order-status-timeline strong {
+    @apply text-sm font-semibold text-text-primary;
+  }
+
+  .order-status-timeline time {
+    @apply mt-0.5 text-xs text-text-secondary;
+  }
+
+  .order-status-timeline p,
+  .order-status-empty {
+    @apply mb-0 mt-1 break-words text-sm leading-5 text-text-secondary;
+  }
+
   .section-heading-row {
     display: flex;
     flex-wrap: wrap;
