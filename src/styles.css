@@ -920,6 +920,21 @@
     gap: 10px;
   }
 
+  .payment-collection-panel,
+  .cancellation-request-panel {
+    @apply mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4;
+  }
+
+  .payment-collection-panel h4,
+  .cancellation-request-panel h4 {
+    @apply mb-1 font-semibold text-gray-900;
+  }
+
+  .payment-collection-panel p,
+  .cancellation-request-panel p {
+    @apply mb-3 text-sm text-gray-600;
+  }
+
   .refund-history {
     margin-top: 22px;
     border-top: 1px solid #e5e7eb;
