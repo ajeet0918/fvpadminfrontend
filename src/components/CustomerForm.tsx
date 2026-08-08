@@ -13,6 +13,7 @@ export type CustomerFormValues = {
   state: string;
   postalCode: string;
   active: boolean;
+  deferredPaymentEligible: boolean;
 };
 
 type CustomerFormProps = {
@@ -90,6 +91,15 @@ export function CustomerForm({
             />
             Customer account is active
           </label>
+          <label className="inline-checkbox mt-3">
+            <input
+              type="checkbox"
+              checked={values.deferredPaymentEligible}
+              onChange={(event) => setValues((current) => ({ ...current, deferredPaymentEligible: event.target.checked }))}
+            />
+            Approved for online payment after delivery
+          </label>
+          <p className="form-help-text">Only enable this after the business account has been reviewed and approved for deferred payment terms.</p>
         </FormSection>
 
         <FormSection title="Contact details" subtitle="Used for order updates, delivery coordination, and support.">

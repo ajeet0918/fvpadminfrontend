@@ -20,7 +20,8 @@ const emptyValues: CustomerFormValues = {
   city: "",
   state: "",
   postalCode: "",
-  active: true
+  active: true,
+  deferredPaymentEligible: false
 };
 
 function formatDate(value: string | null) {
@@ -64,7 +65,8 @@ export function CustomerEditPage() {
           city: customer.city ?? "",
           state: customer.state ?? "",
           postalCode: customer.postalCode ?? "",
-          active: customer.active
+          active: customer.active,
+          deferredPaymentEligible: customer.deferredPaymentEligible
         });
       } catch (error) {
         setErrorMessage(readErrorMessage(error, "Unable to load customer."));
@@ -86,7 +88,8 @@ export function CustomerEditPage() {
       city: nextValues.city.trim(),
       state: nextValues.state.trim(),
       postalCode: nextValues.postalCode.trim(),
-      active: nextValues.active
+      active: nextValues.active,
+      deferredPaymentEligible: nextValues.deferredPaymentEligible
     });
     setSummary(updated);
     setValues({
@@ -98,7 +101,8 @@ export function CustomerEditPage() {
       city: updated.city,
       state: updated.state,
       postalCode: updated.postalCode,
-      active: updated.active
+      active: updated.active,
+      deferredPaymentEligible: updated.deferredPaymentEligible
     });
     setSuccessMessage("Customer updated successfully.");
   }

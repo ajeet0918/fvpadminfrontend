@@ -28,6 +28,7 @@ import type {
   MonthlyReturnDistributionMode,
   OwnerOption,
   Order,
+  OrderRefundMethod,
   OrderStatus,
   PaymentStatus,
   AdminSetting,
@@ -99,11 +100,30 @@ export async function updateOrderStatusApi(orderId: number, payload: { status: O
   return response.data;
 }
 
-export async function createOrderRefundApi(orderId: number, payload: { amount: number; note: string }) {
+export async function markOrderPaymentApi(orderId: number, payload: {
+  paymentMethod: "CASH" | "BANK_TRANSFER";
+  reference: string;
+  note?: string;
+}) {
+  const response = await apiClient.post<Order>(`/orders/${orderId}/payment`, payload);
+  return response.data;
+}
+
+export async function decideOrderCancellationApi(orderId: number, payload: { approved: boolean; note?: string }) {
+  const response = await apiClient.post<Order>(`/orders/${orderId}/cancellation-decision`, payload);
+  return response.data;
+}
+
+export async function createOrderRefundApi(orderId: number, payload: { amount: number; note: string; refundMethod: OrderRefundMethod }) {
   const response = await apiClient.post(`/orders/${orderId}/refunds`, {
     ...payload,
     speed: "STANDARD"
   });
+  return response.data;
+}
+
+export async function completeManualRefundApi(orderId: number, refundId: number, payload: { reference: string; note?: string }) {
+  const response = await apiClient.post(`/orders/${orderId}/refunds/${refundId}/complete`, payload);
   return response.data;
 }
 
@@ -212,6 +232,7 @@ export async function updateAdminCustomerApi(customerId: number, payload: {
   state: string;
   postalCode: string;
   active: boolean;
+  deferredPaymentEligible: boolean;
 }) {
   const response = await apiClient.put<AdminCustomer>(`/admin/customers/${customerId}`, payload);
   return response.data;

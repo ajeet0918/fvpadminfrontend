@@ -7,8 +7,11 @@ import { ErrorBanner, LoadingState } from "../components/PageState";
 import { RefundDialog } from "../components/RefundDialog";
 import { StatusBadge } from "../components/StatusBadge";
 import {
+  completeManualRefundApi,
   createOrderRefundApi,
+  decideOrderCancellationApi,
   fetchOrderApi,
+  markOrderPaymentApi,
   quoteOrderApi,
   readErrorMessage,
   syncOrderRefundsApi,
@@ -69,6 +72,10 @@ export function OrderDetailPage() {
   const [itemPrices, setItemPrices] = useState<Record<number, string>>({});
   const [itemTaxRates, setItemTaxRates] = useState<Record<number, string>>({});
   const [itemDiscountRates, setItemDiscountRates] = useState<Record<number, string>>({});
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "BANK_TRANSFER">("CASH");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentNote, setPaymentNote] = useState("");
+  const [cancellationNote, setCancellationNote] = useState("");
 
   const canSaveQuote = useMemo(() => {
     if (!order) return false;
@@ -167,7 +174,11 @@ export function OrderDetailPage() {
     setActionLoading(true);
     setRefundError(null);
     try {
-      await createOrderRefundApi(order.id, { amount, note });
+      await createOrderRefundApi(order.id, {
+        amount,
+        note,
+        refundMethod: order.paymentProvider === "CASHFREE" ? "CASHFREE" : "BANK_TRANSFER"
+      });
       setRefundDialogOpen(false);
       await loadOrder();
     } catch (error) {
@@ -191,6 +202,59 @@ export function OrderDetailPage() {
     }
   }
 
+  async function markOfflinePayment() {
+    if (!order || !paymentReference.trim()) {
+      setErrorMessage("Enter a receipt, UTR, or collection reference before recording payment.");
+      return;
+    }
+    setActionLoading(true);
+    setErrorMessage(null);
+    try {
+      await markOrderPaymentApi(order.id, {
+        paymentMethod,
+        reference: paymentReference.trim(),
+        note: paymentNote.trim() || undefined
+      });
+      setPaymentReference("");
+      setPaymentNote("");
+      await loadOrder();
+    } catch (error) {
+      setErrorMessage(readErrorMessage(error, "Unable to record payment."));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function decideCancellation(approved: boolean) {
+    if (!order) return;
+    setActionLoading(true);
+    setErrorMessage(null);
+    try {
+      await decideOrderCancellationApi(order.id, { approved, note: cancellationNote.trim() || undefined });
+      setCancellationNote("");
+      await loadOrder();
+    } catch (error) {
+      setErrorMessage(readErrorMessage(error, "Unable to decide cancellation request."));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function completeManualRefund(refundId: number) {
+    const reference = window.prompt("Enter the bank transfer reference/UTR:");
+    if (!reference?.trim()) return;
+    setActionLoading(true);
+    setErrorMessage(null);
+    try {
+      await completeManualRefundApi(orderId, refundId, { reference: reference.trim() });
+      await loadOrder();
+    } catch (error) {
+      setErrorMessage(readErrorMessage(error, "Unable to complete manual refund."));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   if (loading) return <LoadingState label="Loading order..." />;
   if (!order) return <ErrorBanner message="Order not found." />;
 
@@ -204,9 +268,10 @@ export function OrderDetailPage() {
   const refunds = order.refunds ?? [];
   const canManageRefunds = ["ADMIN", "SYSADMIN"].includes(getCurrentRole());
   const canRefund = paymentStatus === "PAID"
-    && order.paymentProvider === "CASHFREE"
+    && (order.paymentProvider === "CASHFREE" || order.paymentProvider === "CASH" || order.paymentProvider === "BANK_TRANSFER")
     && refundSummary.refundableAmount > 0
     && canManageRefunds;
+  const canManagePayments = ["ADMIN", "SYSADMIN", "SALES"].includes(getCurrentRole());
 
   return (
     <section className="admin-page">
@@ -252,7 +317,24 @@ export function OrderDetailPage() {
           <div><dt>Provider</dt><dd>{order.paymentProvider ?? "Not initiated"}</dd></div>
           <div><dt>Paid on</dt><dd>{order.paidAt ? new Date(order.paidAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "Not paid"}</dd></div>
           <div><dt>Payment reference</dt><dd>{order.paymentProviderReference ?? "Not available"}</dd></div>
+          <div><dt>Payment method</dt><dd>{formatEnumLabel(order.paymentMethod)}</dd></div>
+          {order.paymentCollectionReference ? <div><dt>Collection reference</dt><dd>{order.paymentCollectionReference}</dd></div> : null}
         </dl>
+
+        {paymentStatus !== "PAID" && order.paymentMethod !== "ONLINE" && canManagePayments ? (
+          <div className="payment-collection-panel">
+            <h4>Record payment collected</h4>
+            <p>Use this only after the delivery receipt or bank settlement has been verified.</p>
+            <div className="row">
+              <label>Method<select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value as "CASH" | "BANK_TRANSFER")}><option value="CASH">Cash</option><option value="BANK_TRANSFER">Bank transfer</option></select></label>
+              <label>Receipt / UTR reference<input value={paymentReference} onChange={(event) => setPaymentReference(event.target.value)} placeholder="Required" /></label>
+              <label>Internal note<input value={paymentNote} onChange={(event) => setPaymentNote(event.target.value)} placeholder="Optional" /></label>
+            </div>
+            <button type="button" className="button-link" disabled={actionLoading || !paymentReference.trim()} onClick={() => void markOfflinePayment()}>
+              {actionLoading ? "Saving..." : "Mark payment received"}
+            </button>
+          </div>
+        ) : null}
 
         <div className="payment-actions">
           {paymentStatus === "PAID" && order.paymentProvider === "CASHFREE" && canManageRefunds ? (
@@ -277,11 +359,14 @@ export function OrderDetailPage() {
               <div className="refund-history-row" key={refund.refundId}>
                 <div>
                   <strong>{formatCurrency(refund.amount, refund.currency)}</strong>
-                  <span>{refund.note}</span>
+                  <span>{formatEnumLabel(refund.refundMethod)} · {refund.note}</span>
                 </div>
                 <div>
                   <StatusBadge label={formatEnumLabel(refund.status)} tone={refund.status === "SUCCESS" ? "success" : refund.status === "FAILED" || refund.status === "CANCELLED" ? "danger" : "warning"} />
                   <small>{new Date(refund.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</small>
+                  {refund.refundMethod === "BANK_TRANSFER" && ["PENDING", "ONHOLD"].includes(refund.status) && canManageRefunds ? (
+                    <button type="button" className="button-link button-small" disabled={actionLoading} onClick={() => void completeManualRefund(refund.id)}>Complete refund</button>
+                  ) : null}
                 </div>
               </div>
             ))}
@@ -378,6 +463,21 @@ export function OrderDetailPage() {
           </div>
           <StatusBadge label={formatEnumLabel(order.status)} tone={getOrderStatusTone(order.status)} />
         </div>
+
+        {order.cancellationStatus === "REQUESTED" ? (
+          <div className="cancellation-request-panel">
+            <h4>Customer cancellation request</h4>
+            <p><strong>Reason:</strong> {order.cancellationReason}</p>
+            <label>
+              Decision note
+              <textarea rows={2} value={cancellationNote} onChange={(event) => setCancellationNote(event.target.value)} placeholder="Explain the approval or rejection." />
+            </label>
+            <div className="status-update-actions">
+              <button type="button" className="button-link button-danger" disabled={actionLoading} onClick={() => void decideCancellation(true)}>Approve cancellation</button>
+              <button type="button" className="button-link button-link-secondary" disabled={actionLoading} onClick={() => void decideCancellation(false)}>Reject request</button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="order-status-layout">
           <div className="order-status-editor">
