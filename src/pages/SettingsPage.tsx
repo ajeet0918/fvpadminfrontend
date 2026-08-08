@@ -9,7 +9,7 @@ import {
 } from "../lib/api";
 import type { AdminSetting, AdminSettingValueType } from "../types/domain";
 
-type SettingsSection = "general" | "payment" | "smtp";
+type SettingsSection = "general" | "payment" | "investor" | "smtp";
 
 type SettingsFormState = {
   supportEmail: string;
@@ -20,6 +20,14 @@ type SettingsFormState = {
   cashfreeClientId: string;
   cashfreeClientSecret: string;
   cashfreeWebhookEnforceSignature: boolean;
+  cashfreeWebhookNotifyUrl: string;
+  investorCompanyLegalName: string;
+  investorCompanyAddress: string;
+  investorAuthorizedSignatory: string;
+  investorAgreementTermsVersion: string;
+  investorAgreementTermsText: string;
+  investorPaymentLinkExpiryDays: string;
+  investorPaymentReturnUrl: string;
   smtpActive: boolean;
   smtpHost: string;
   smtpPort: string;
@@ -40,7 +48,15 @@ const DEFAULT_FORM: SettingsFormState = {
   cashfreeApiVersion: "2023-08-01",
   cashfreeClientId: "",
   cashfreeClientSecret: "",
-  cashfreeWebhookEnforceSignature: false,
+  cashfreeWebhookEnforceSignature: true,
+  cashfreeWebhookNotifyUrl: "",
+  investorCompanyLegalName: "",
+  investorCompanyAddress: "",
+  investorAuthorizedSignatory: "",
+  investorAgreementTermsVersion: "",
+  investorAgreementTermsText: "",
+  investorPaymentLinkExpiryDays: "7",
+  investorPaymentReturnUrl: "",
   smtpActive: false,
   smtpHost: "",
   smtpPort: "587",
@@ -89,6 +105,7 @@ export function SettingsPage() {
   const [openSections, setOpenSections] = useState<Record<SettingsSection, boolean>>({
     general: true,
     payment: false,
+    investor: false,
     smtp: false
   });
   const [form, setForm] = useState<SettingsFormState>(DEFAULT_FORM);
@@ -130,6 +147,46 @@ export function SettingsPage() {
             ),
             DEFAULT_FORM.cashfreeWebhookEnforceSignature
           ),
+          cashfreeWebhookNotifyUrl: findSettingValue(
+            settingsByKey,
+            "payment.cashfree.webhook-notify-url",
+            DEFAULT_FORM.cashfreeWebhookNotifyUrl
+          ),
+          investorCompanyLegalName: findSettingValue(
+            settingsByKey,
+            "investor.company.legal-name",
+            DEFAULT_FORM.investorCompanyLegalName
+          ),
+          investorCompanyAddress: findSettingValue(
+            settingsByKey,
+            "investor.company.address",
+            DEFAULT_FORM.investorCompanyAddress
+          ),
+          investorAuthorizedSignatory: findSettingValue(
+            settingsByKey,
+            "investor.company.authorized-signatory",
+            DEFAULT_FORM.investorAuthorizedSignatory
+          ),
+          investorAgreementTermsVersion: findSettingValue(
+            settingsByKey,
+            "investor.agreement.terms-version",
+            DEFAULT_FORM.investorAgreementTermsVersion
+          ),
+          investorAgreementTermsText: findSettingValue(
+            settingsByKey,
+            "investor.agreement.terms-text",
+            DEFAULT_FORM.investorAgreementTermsText
+          ),
+          investorPaymentLinkExpiryDays: findSettingValue(
+            settingsByKey,
+            "investor.payment-link.expiry-days",
+            DEFAULT_FORM.investorPaymentLinkExpiryDays
+          ),
+          investorPaymentReturnUrl: findSettingValue(
+            settingsByKey,
+            "investor.payment-link.return-url",
+            DEFAULT_FORM.investorPaymentReturnUrl
+          ),
           smtpActive: smtpConfig.active,
           smtpHost: smtpConfig.host ?? "",
           smtpPort: smtpConfig.port?.toString() ?? DEFAULT_FORM.smtpPort,
@@ -167,6 +224,14 @@ export function SettingsPage() {
       createSettingEntry("payment.cashfree.client-id", "PAYMENT", form.cashfreeClientId.trim(), "STRING", false, "Cashfree client ID"),
       createSettingEntry("payment.cashfree.client-secret", "PAYMENT", form.cashfreeClientSecret, "STRING", true, "Cashfree client secret"),
       createSettingEntry(
+        "payment.cashfree.webhook-notify-url",
+        "PAYMENT",
+        form.cashfreeWebhookNotifyUrl.trim(),
+        "STRING",
+        false,
+        "Public HTTPS endpoint for Cashfree investor payment-link webhooks"
+      ),
+      createSettingEntry(
         "payment.cashfree.webhook-enforce-signature",
         "PAYMENT",
         String(form.cashfreeWebhookEnforceSignature),
@@ -180,7 +245,29 @@ export function SettingsPage() {
       form.cashfreeClientId,
       form.cashfreeClientSecret,
       form.cashfreeEnabled,
-      form.cashfreeWebhookEnforceSignature
+      form.cashfreeWebhookEnforceSignature,
+      form.cashfreeWebhookNotifyUrl
+    ]
+  );
+
+  const investorSettingsPayload = useMemo(
+    () => [
+      createSettingEntry("investor.company.legal-name", "INVESTOR", form.investorCompanyLegalName.trim(), "STRING", false, "Legal company name shown on investor agreements"),
+      createSettingEntry("investor.company.address", "INVESTOR", form.investorCompanyAddress.trim(), "STRING", false, "Registered company address shown on investor agreements"),
+      createSettingEntry("investor.company.authorized-signatory", "INVESTOR", form.investorAuthorizedSignatory.trim(), "STRING", false, "Authorized company signatory shown on investor agreements"),
+      createSettingEntry("investor.agreement.terms-version", "INVESTOR", form.investorAgreementTermsVersion.trim(), "STRING", false, "Version identifier snapshotted into each agreement"),
+      createSettingEntry("investor.agreement.terms-text", "INVESTOR", form.investorAgreementTermsText.trim(), "STRING", false, "Approved legal terms snapshotted into each investor agreement"),
+      createSettingEntry("investor.payment-link.expiry-days", "INVESTOR", form.investorPaymentLinkExpiryDays.trim(), "NUMBER", false, "Cashfree investor payment-link validity in days"),
+      createSettingEntry("investor.payment-link.return-url", "INVESTOR", form.investorPaymentReturnUrl.trim(), "STRING", false, "Public page Cashfree returns the investor to after payment")
+    ],
+    [
+      form.investorAgreementTermsText,
+      form.investorAgreementTermsVersion,
+      form.investorAuthorizedSignatory,
+      form.investorCompanyAddress,
+      form.investorCompanyLegalName,
+      form.investorPaymentLinkExpiryDays,
+      form.investorPaymentReturnUrl
     ]
   );
 
@@ -207,7 +294,56 @@ export function SettingsPage() {
   }
 
   function handleSavePaymentSettings() {
+    if (form.cashfreeEnabled && (!form.cashfreeClientId.trim() || !form.cashfreeClientSecret.trim())) {
+      setErrorMessage("Cashfree client ID and client secret are required when the gateway is enabled.");
+      return;
+    }
+    if (form.cashfreeEnabled && !form.cashfreeWebhookEnforceSignature) {
+      setErrorMessage("Webhook signature verification must remain enabled for production payments.");
+      return;
+    }
+    if (form.cashfreeEnabled) {
+      try {
+        const webhookUrl = new URL(form.cashfreeWebhookNotifyUrl);
+        if (webhookUrl.protocol !== "https:") {
+          throw new Error("unsupported protocol");
+        }
+      } catch {
+        setErrorMessage("Cashfree investor webhook URL must be a valid HTTPS URL.");
+        return;
+      }
+    }
     void saveSection("payment", "Payment gateway settings saved.", () => saveAdminSettingsApi(paymentSettingsPayload));
+  }
+
+  function handleSaveInvestorSettings() {
+    const requiredValues = [
+      form.investorCompanyLegalName,
+      form.investorCompanyAddress,
+      form.investorAuthorizedSignatory,
+      form.investorAgreementTermsVersion,
+      form.investorAgreementTermsText,
+      form.investorPaymentReturnUrl
+    ];
+    const expiryDays = Number(form.investorPaymentLinkExpiryDays);
+    if (requiredValues.some((value) => !value.trim())) {
+      setErrorMessage("Complete every investor onboarding setting before saving.");
+      return;
+    }
+    if (!Number.isInteger(expiryDays) || expiryDays < 1 || expiryDays > 90) {
+      setErrorMessage("Investor payment-link expiry must be a whole number between 1 and 90 days.");
+      return;
+    }
+    try {
+      const returnUrl = new URL(form.investorPaymentReturnUrl);
+      if (returnUrl.protocol !== "https:") {
+        throw new Error("unsupported protocol");
+      }
+    } catch {
+      setErrorMessage("Investor payment return URL must be a valid HTTPS URL.");
+      return;
+    }
+    void saveSection("investor", "Investor onboarding settings saved.", () => saveAdminSettingsApi(investorSettingsPayload));
   }
 
   function handleSaveSmtpSettings() {
@@ -349,6 +485,15 @@ export function SettingsPage() {
                 placeholder="Leave as ******** to keep existing secret"
               />
             </label>
+            <label>
+              Investor Payment Webhook URL
+              <input
+                type="url"
+                value={form.cashfreeWebhookNotifyUrl}
+                onChange={(event) => setForm((prev) => ({ ...prev, cashfreeWebhookNotifyUrl: event.target.value }))}
+                placeholder="https://api.example.com/api/inquiries/investor/payment-links/cashfree/webhook"
+              />
+            </label>
           </div>
           <div className="settings-section-actions">
             <button
@@ -358,6 +503,96 @@ export function SettingsPage() {
               disabled={loading || savingSection !== null}
             >
               {savingSection === "payment" ? "Saving..." : "Save Payment Gateway"}
+            </button>
+          </div>
+        </SettingsAccordion>
+
+        <SettingsAccordion
+          title="Investor Onboarding"
+          description="Company identity, payment-link validity, and immutable agreement terms used during investor approval."
+          status={form.investorAgreementTermsVersion.trim() ? "Configured" : "Required"}
+          tone={form.investorAgreementTermsVersion.trim() ? "success" : "warning"}
+          open={openSections.investor}
+          onToggle={() => toggleSection("investor")}
+        >
+          <p className="table-muted">
+            These values are snapshotted when an investor is approved. Later edits do not alter an existing agreement.
+          </p>
+          <div className="form-grid-2">
+            <label>
+              Company Legal Name
+              <input
+                required
+                value={form.investorCompanyLegalName}
+                onChange={(event) => setForm((prev) => ({ ...prev, investorCompanyLegalName: event.target.value }))}
+              />
+            </label>
+            <label>
+              Authorized Signatory
+              <input
+                required
+                value={form.investorAuthorizedSignatory}
+                onChange={(event) => setForm((prev) => ({ ...prev, investorAuthorizedSignatory: event.target.value }))}
+              />
+            </label>
+            <label>
+              Agreement Terms Version
+              <input
+                required
+                value={form.investorAgreementTermsVersion}
+                onChange={(event) => setForm((prev) => ({ ...prev, investorAgreementTermsVersion: event.target.value }))}
+                placeholder="INVESTOR-2026-01"
+              />
+            </label>
+            <label>
+              Payment Link Expiry (days)
+              <input
+                required
+                type="number"
+                min="1"
+                max="90"
+                value={form.investorPaymentLinkExpiryDays}
+                onChange={(event) => setForm((prev) => ({ ...prev, investorPaymentLinkExpiryDays: event.target.value }))}
+              />
+            </label>
+            <label>
+              Payment Return URL
+              <input
+                required
+                type="url"
+                value={form.investorPaymentReturnUrl}
+                onChange={(event) => setForm((prev) => ({ ...prev, investorPaymentReturnUrl: event.target.value }))}
+                placeholder="https://www.example.com/partner/login"
+              />
+            </label>
+          </div>
+          <label>
+            Registered Company Address
+            <textarea
+              required
+              rows={3}
+              value={form.investorCompanyAddress}
+              onChange={(event) => setForm((prev) => ({ ...prev, investorCompanyAddress: event.target.value }))}
+            />
+          </label>
+          <label>
+            Approved Agreement Terms
+            <textarea
+              required
+              rows={12}
+              value={form.investorAgreementTermsText}
+              onChange={(event) => setForm((prev) => ({ ...prev, investorAgreementTermsText: event.target.value }))}
+              placeholder="Enter the legal text approved by your company. Separate clauses with blank lines."
+            />
+          </label>
+          <div className="settings-section-actions">
+            <button
+              type="button"
+              className="button-link"
+              onClick={handleSaveInvestorSettings}
+              disabled={loading || savingSection !== null}
+            >
+              {savingSection === "investor" ? "Saving..." : "Save Investor Onboarding"}
             </button>
           </div>
         </SettingsAccordion>

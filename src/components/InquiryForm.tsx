@@ -54,6 +54,7 @@ type InquiryFormProps = {
   submitLabel: string;
   onConvertToLead?: (values: InquiryFormValues) => Promise<void> | void;
   disableConvert?: boolean;
+  automatedInvestorFlow?: boolean;
 };
 
 export function InquiryForm({
@@ -67,7 +68,8 @@ export function InquiryForm({
   onCancel,
   submitLabel,
   onConvertToLead,
-  disableConvert = false
+  disableConvert = false,
+  automatedInvestorFlow = false
 }: InquiryFormProps) {
   const [values, setValues] = useState<InquiryFormValues>(initialValues);
   const [submitting, setSubmitting] = useState(false);
@@ -128,20 +130,22 @@ export function InquiryForm({
               </select>
             </label>
 
-            <label>
-              Payment Status
-              <select
-                value={values.paymentStatus}
-                onChange={(event) => setValues((current) => ({
-                  ...current,
-                  paymentStatus: event.target.value as PaymentStatus
-                }))}
-              >
-                {paymentStatuses.map((status) => (
-                  <option key={status} value={status}>{formatEnumLabel(status)}</option>
-                ))}
-              </select>
-            </label>
+            {!automatedInvestorFlow ? (
+              <label>
+                Payment Status
+                <select
+                  value={values.paymentStatus}
+                  onChange={(event) => setValues((current) => ({
+                    ...current,
+                    paymentStatus: event.target.value as PaymentStatus
+                  }))}
+                >
+                  {paymentStatuses.map((status) => (
+                    <option key={status} value={status}>{formatEnumLabel(status)}</option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
 
             <label>
               Assigned to
@@ -163,26 +167,30 @@ export function InquiryForm({
 
         <FormSection title="Operational details" subtitle="Use only the fields relevant to this inquiry type and current approval stage.">
           <div className="form-grid-2">
-            <label>
-              Agreement ID
-              <input
-                value={values.agreementId}
-                onChange={(event) => setValues((current) => ({ ...current, agreementId: event.target.value }))}
-                placeholder="Optional for investor approval stage"
-              />
-            </label>
+            {!automatedInvestorFlow ? (
+              <>
+                <label>
+                  Agreement ID
+                  <input
+                    value={values.agreementId}
+                    onChange={(event) => setValues((current) => ({ ...current, agreementId: event.target.value }))}
+                    placeholder="Optional for investor approval stage"
+                  />
+                </label>
 
-            <label>
-              Committed return amount
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={values.committedReturnAmount}
-                onChange={(event) => setValues((current) => ({ ...current, committedReturnAmount: event.target.value }))}
-                placeholder="Investor return projection"
-              />
-            </label>
+                <label>
+                  Committed return amount
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={values.committedReturnAmount}
+                    onChange={(event) => setValues((current) => ({ ...current, committedReturnAmount: event.target.value }))}
+                    placeholder="Investor return projection"
+                  />
+                </label>
+              </>
+            ) : null}
 
             <label>
               Farmer action

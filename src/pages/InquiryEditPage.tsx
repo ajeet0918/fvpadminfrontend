@@ -3,6 +3,7 @@ import MailOutlineRoundedIcon from "@mui/icons-material/MailOutlineRounded";
 import { useNavigate, useParams } from "react-router-dom";
 import { BackLink } from "../components/BackLink";
 import { InquiryForm, type InquiryFormValues } from "../components/InquiryForm";
+import { InvestorOnboardingPanel } from "../components/InvestorOnboardingPanel";
 import { PageHeader } from "../components/PageHeader";
 import { ErrorBanner, LoadingState, SuccessBanner } from "../components/PageState";
 import {
@@ -162,7 +163,6 @@ export function InquiryEditPage() {
   }
 
   const canCreatePortalUser = inquiry?.inquiryType === "FARMER"
-    || inquiry?.inquiryType === "INVESTOR"
     || inquiry?.inquiryType === "COLLECTION_HUB";
 
   return (
@@ -325,6 +325,10 @@ export function InquiryEditPage() {
         </article>
       ) : null}
 
+      {!loading && inquiry?.inquiryType === "INVESTOR" ? (
+        <InvestorOnboardingPanel inquiry={inquiry} />
+      ) : null}
+
       {!loading ? (
         <InquiryForm
           title="Workflow controls"
@@ -335,8 +339,9 @@ export function InquiryEditPage() {
           onSubmit={handleSubmit}
           onCancel={() => navigate("/inquiries")}
           submitLabel="Save changes"
-          onConvertToLead={handleConvertToLead}
+          onConvertToLead={inquiry?.inquiryType === "INVESTOR" ? undefined : handleConvertToLead}
           disableConvert={inquiry?.status === "CONVERTED"}
+          automatedInvestorFlow={inquiry?.inquiryType === "INVESTOR"}
         />
       ) : null}
     </section>
