@@ -248,11 +248,45 @@ export type PaymentStatus =
 
 export type InvestorAccountStatus =
   | "PENDING_VERIFICATION"
+  | "PENDING_PAYMENT"
   | "ACTIVE"
   | "SUSPENDED"
   | "CLOSED";
 
-export type InvestmentStatus = "ACTIVE" | "PAUSED" | "CLOSED";
+export type InvestmentStatus = "PENDING_PAYMENT" | "ACTIVE" | "PAUSED" | "CLOSED";
+
+export type InvestorOnboarding = {
+  inquiryId: number;
+  investorId: number;
+  investorCode: string;
+  investorStatus: string;
+  verificationStatus: string;
+  investmentId: number;
+  investmentReference: string;
+  investmentStatus: string;
+  principalAmount: number;
+  monthlyReturnRate: number;
+  investmentStartDate: string;
+  investmentEndDate: string | null;
+  paymentId: number;
+  merchantLinkId: string;
+  paymentLink: string;
+  paymentStatus: string;
+  amountPaid: number;
+  paymentLinkExpiresAt: string | null;
+  paymentEmailStatus: string;
+  paymentEmailSentAt: string | null;
+  paymentEmailError: string | null;
+  portalInviteStatus: string;
+  portalInviteSentAt: string | null;
+  portalInviteError: string | null;
+  agreementId: number | null;
+  agreementNumber: string | null;
+  agreementStatus: string | null;
+  agreementDownloadUrl: string | null;
+  agreementGeneratedAt: string | null;
+  agreementGenerationError: string | null;
+};
 
 export type InvestorMonthlyReturnStatus =
   | "DRAFT"

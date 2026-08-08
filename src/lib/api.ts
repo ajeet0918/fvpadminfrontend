@@ -16,6 +16,7 @@ import type {
   Investment,
   InvestorAccount,
   InvestorOverview,
+  InvestorOnboarding,
   InvestorProfileResponse,
   InvestorProfileUpsertPayload,
   InvestorMonthlyReturn,
@@ -450,6 +451,43 @@ export async function convertInquiryToLeadApi(inquiryId: number, payload: {
 
 export async function createPortalUserForInquiryApi(inquiryId: number) {
   const response = await apiClient.post<PortalAccountInvite>(`/admin/inquiries/${inquiryId}/portal-user`);
+  return response.data;
+}
+
+export async function fetchInvestorOnboardingApi(inquiryId: number) {
+  const response = await apiClient.get<InvestorOnboarding>(`/admin/inquiries/${inquiryId}/investor-onboarding`);
+  return response.data;
+}
+
+export async function approveInvestorOnboardingApi(inquiryId: number, payload: {
+  monthlyReturnRate: number;
+  investmentStartDate: string;
+  investmentEndDate: string | null;
+  notes: string | null;
+}) {
+  const response = await apiClient.post<InvestorOnboarding>(
+    `/admin/inquiries/${inquiryId}/investor-onboarding/approve`,
+    payload
+  );
+  return response.data;
+}
+
+export async function resendInvestorPaymentEmailApi(inquiryId: number) {
+  const response = await apiClient.post<InvestorOnboarding>(
+    `/admin/inquiries/${inquiryId}/investor-onboarding/resend-payment-email`
+  );
+  return response.data;
+}
+
+export async function resendInvestorPortalInviteApi(inquiryId: number) {
+  await apiClient.post(`/admin/inquiries/${inquiryId}/investor-onboarding/resend-portal-invite`);
+}
+
+export async function downloadInvestorAgreementApi(inquiryId: number) {
+  const response = await apiClient.get<Blob>(
+    `/admin/inquiries/${inquiryId}/investor-onboarding/agreement`,
+    { responseType: "blob" }
+  );
   return response.data;
 }
 
