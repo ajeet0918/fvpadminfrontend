@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import {
   approveInvestorOnboardingApi,
   downloadInvestorAgreementApi,
@@ -28,11 +28,7 @@ export function InvestorOnboardingPanel({ inquiry, onChanged }: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    void load();
-  }, [inquiry.id]);
-
-  async function load() {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetchInvestorOnboardingApi(inquiry.id);
@@ -47,7 +43,11 @@ export function InvestorOnboardingPanel({ inquiry, onChanged }: Props) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [inquiry.id]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   async function approve(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
