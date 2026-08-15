@@ -34,13 +34,157 @@
   }
 }
 
+@layer base {
+  ::selection {
+    @apply bg-green-200 text-text-primary;
+  }
+
+  :where(a, button, input, textarea, select):focus-visible {
+    @apply outline-none ring-2 ring-brand/30 ring-offset-2 ring-offset-app;
+  }
+}
+
+@layer components {
+  .admin-skip-link {
+    @apply fixed left-1/2 top-3 z-[100] -translate-x-1/2 -translate-y-24 rounded-full bg-text-primary px-4 py-2 text-sm font-semibold text-white shadow-lg transition-transform focus:translate-y-0;
+  }
+
+  .admin-page {
+    @apply gap-5 md:gap-6;
+  }
+
+  .page-header-copy p {
+    @apply max-w-4xl;
+  }
+
+  .page-actions {
+    @apply gap-2.5;
+  }
+
+  .button-link-secondary,
+  .button-muted {
+    @apply border-border bg-card shadow-none hover:border-green-200 hover:bg-green-50 hover:text-brand;
+  }
+
+  .button-danger {
+    @apply border-red-200 bg-red-50 shadow-none hover:bg-red-100;
+  }
+
+  .stat-card,
+  .dashboard-panel,
+  .kpi-card,
+  .admin-form-card,
+  .filter-grid,
+  .financial-filter-row,
+  .table-toolbar {
+    @apply border-border shadow-card;
+  }
+
+  .stat-card {
+    @apply rounded-xl p-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(15,47,30,0.09)];
+  }
+
+  .stat-card-value {
+    @apply text-[2rem] tracking-tight;
+  }
+
+  .stat-card-icon {
+    @apply h-10 w-10 rounded-xl border-green-100 bg-green-50 text-brand;
+  }
+
+  .dashboard-panel,
+  .admin-form-card {
+    @apply rounded-xl;
+  }
+
+  .dashboard-panel-header {
+    @apply mb-6;
+  }
+
+  .work-queue-item {
+    @apply rounded-lg border-border bg-card px-3.5 py-3 hover:-translate-y-px hover:border-green-200 hover:bg-green-50 hover:shadow-sm;
+  }
+
+  .filter-grid,
+  .financial-filter-row,
+  .table-toolbar {
+    @apply rounded-xl bg-card p-4 md:p-5;
+  }
+
+  .table-toolbar {
+    @apply md:grid-cols-[minmax(0,1.6fr)_minmax(180px,0.7fr)_minmax(180px,0.7fr)];
+  }
+
+  .table-toolbar input,
+  .table-toolbar select,
+  .filter-grid input,
+  .filter-grid select,
+  .admin-form-card input:not([type="checkbox"]),
+  .admin-form-card textarea,
+  .admin-form-card select,
+  .login-card input {
+    @apply rounded-lg border-border bg-card px-3.5 transition placeholder:text-gray-400 hover:border-green-200 focus:border-brand focus:ring-4 focus:ring-brand/10;
+  }
+
+  .data-table th {
+    @apply bg-[#F7FAF8] py-3.5 font-bold tracking-wide;
+  }
+
+  .data-table td {
+    @apply py-3.5;
+  }
+
+  .data-table tbody tr:hover {
+    @apply bg-green-50/70;
+  }
+
+  .record-id-link {
+    @apply decoration-brand/30 underline-offset-4;
+  }
+
+  .empty-state {
+    @apply min-h-56 bg-[radial-gradient(circle_at_top,_rgba(220,252,231,0.55),_transparent_60%)];
+  }
+
+  .status-pill,
+  .settings-status-pill {
+    @apply px-2.5 py-1;
+  }
+
+  .form-action-bar {
+    @apply bg-[#F7FAF8];
+  }
+
+  .admin-topbar-actions .button-link {
+    @apply min-h-9;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-main-content {
+    padding-bottom: 24px;
+  }
+
+  .page-actions > .button-link {
+    flex: 1 1 auto;
+  }
+
+  .table-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .actions-cell {
+    min-width: 112px;
+  }
+}
+
 @layer components {
   .auth-check-screen {
     @apply grid min-h-screen place-items-center bg-app p-6;
   }
 
   .admin-main-content {
-    @apply mx-auto min-h-full w-full max-w-[1500px] p-4 md:p-6 lg:px-8 lg:py-7;
+    @apply mx-auto min-h-full w-full max-w-[1560px] p-4 md:p-6 lg:px-8 lg:py-8;
   }
 
   .admin-page {
@@ -56,7 +200,7 @@
   }
 
   .page-header-copy h1 {
-    @apply m-0 text-2xl font-semibold leading-tight text-text-primary;
+    @apply m-0 text-2xl font-bold leading-tight tracking-tight text-text-primary md:text-[1.7rem];
   }
 
   .page-header-copy p {
@@ -68,7 +212,7 @@
   }
 
   .button-link {
-    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-transparent bg-brand px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#14532d] focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-transparent bg-brand px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-[#0F6037] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-sm;
   }
 
   .button-link-secondary,
@@ -121,7 +265,7 @@
   }
 
   .admin-sidebar {
-    @apply border-r border-[#29352d] bg-[#18201b] text-white;
+    @apply border-r border-[#263b30] bg-[#13251b] text-white shadow-[12px_0_30px_rgba(15,47,30,0.08)];
   }
 
   .admin-nav-section-label {
@@ -141,7 +285,7 @@
   }
 
   .admin-topbar {
-    @apply sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur;
+    @apply sticky top-0 z-20 border-b border-border bg-card/95 shadow-[0_1px_0_rgba(15,47,30,0.03)] backdrop-blur;
   }
 
   .admin-topbar-actions {
@@ -189,7 +333,7 @@
   }
 
   .page-loading-state {
-    @apply flex min-h-32 items-center justify-center gap-3 rounded-lg border border-border bg-card p-6 text-sm font-medium text-text-secondary shadow-card;
+    @apply flex min-h-36 items-center justify-center gap-3 rounded-xl border border-border bg-card p-6 text-sm font-medium text-text-secondary shadow-card;
   }
 
   .page-error-banner {
@@ -1023,7 +1167,7 @@
   }
 
   .data-table-wrap {
-    @apply overflow-x-auto rounded-lg border border-border bg-card shadow-card;
+    @apply overflow-x-auto rounded-xl border border-border bg-card shadow-card;
   }
 
   .section-table-scroll {
@@ -1195,5 +1339,136 @@
 
   .confirmation-dialog-actions {
     @apply mt-5 flex flex-wrap justify-end gap-2 border-t border-border pt-4;
+  }
+}
+
+/* UI/UX system refinements applied after the original component rules. */
+@layer components {
+  .admin-page {
+    @apply gap-5 md:gap-6;
+  }
+
+  .page-header-copy p {
+    @apply max-w-4xl;
+  }
+
+  .page-actions {
+    @apply gap-2.5;
+  }
+
+  .button-link-secondary,
+  .button-muted {
+    @apply border-border bg-card shadow-none hover:border-green-200 hover:bg-green-50 hover:text-brand;
+  }
+
+  .button-danger {
+    @apply border-red-200 bg-red-50 shadow-none hover:bg-red-100;
+  }
+
+  .stat-card,
+  .dashboard-panel,
+  .kpi-card,
+  .admin-form-card,
+  .filter-grid,
+  .financial-filter-row,
+  .table-toolbar {
+    @apply border-border shadow-card;
+  }
+
+  .stat-card {
+    @apply rounded-xl p-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(15,47,30,0.09)];
+  }
+
+  .stat-card-value {
+    @apply text-[2rem] tracking-tight;
+  }
+
+  .stat-card-icon {
+    @apply h-10 w-10 rounded-xl border-green-100 bg-green-50 text-brand;
+  }
+
+  .dashboard-panel,
+  .admin-form-card {
+    @apply rounded-xl;
+  }
+
+  .dashboard-panel-header {
+    @apply mb-6;
+  }
+
+  .work-queue-item {
+    @apply rounded-lg border-border bg-card px-3.5 py-3 hover:-translate-y-px hover:border-green-200 hover:bg-green-50 hover:shadow-sm;
+  }
+
+  .filter-grid,
+  .financial-filter-row,
+  .table-toolbar {
+    @apply rounded-xl bg-card p-4 md:p-5;
+  }
+
+  .table-toolbar {
+    @apply md:grid-cols-[minmax(0,1.6fr)_minmax(180px,0.7fr)_minmax(180px,0.7fr)];
+  }
+
+  .table-toolbar input,
+  .table-toolbar select,
+  .filter-grid input,
+  .filter-grid select,
+  .admin-form-card input:not([type="checkbox"]),
+  .admin-form-card textarea,
+  .admin-form-card select,
+  .login-card input {
+    @apply rounded-lg border-border bg-card px-3.5 transition placeholder:text-gray-400 hover:border-green-200 focus:border-brand focus:ring-4 focus:ring-brand/10;
+  }
+
+  .data-table th {
+    @apply bg-[#F7FAF8] py-3.5 font-bold tracking-wide;
+  }
+
+  .data-table td {
+    @apply py-3.5;
+  }
+
+  .data-table tbody tr:hover {
+    @apply bg-green-50/70;
+  }
+
+  .record-id-link {
+    @apply decoration-brand/30 underline-offset-4;
+  }
+
+  .empty-state {
+    @apply min-h-56 bg-[radial-gradient(circle_at_top,_rgba(220,252,231,0.55),_transparent_60%)];
+  }
+
+  .status-pill,
+  .settings-status-pill {
+    @apply px-2.5 py-1;
+  }
+
+  .form-action-bar {
+    @apply bg-[#F7FAF8];
+  }
+
+  .admin-topbar-actions .button-link {
+    @apply min-h-9;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-main-content {
+    padding-bottom: 24px;
+  }
+
+  .page-actions > .button-link {
+    flex: 1 1 auto;
+  }
+
+  .table-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .actions-cell {
+    min-width: 112px;
   }
 }
