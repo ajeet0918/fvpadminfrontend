@@ -18,7 +18,9 @@ export function DataTable({ children, isEmpty = false, emptyText = "No records f
           <span>{emptyText}</span>
         </div>
       ) : (
-        <table className="data-table">{children}</table>
+        <div className="data-table-scroll" tabIndex={0} aria-label="Scrollable records table">
+          <table className="data-table">{children}</table>
+        </div>
       )}
     </div>
   );

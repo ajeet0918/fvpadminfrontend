@@ -158,6 +158,82 @@
   .admin-topbar-actions .button-link {
     @apply min-h-9;
   }
+
+  .page-header {
+    @apply items-end border-b border-border pb-5;
+  }
+
+  .page-header-side {
+    @apply flex flex-col items-end gap-3;
+  }
+
+  .page-eyebrow {
+    @apply mb-2 inline-flex rounded-full bg-brand-light px-2.5 py-1 text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-brand;
+  }
+
+  .page-header-context {
+    @apply max-w-xs text-right text-xs leading-5 text-text-secondary;
+  }
+
+  .stat-card-label {
+    @apply flex items-center gap-2;
+  }
+
+  .stat-card-indicator {
+    @apply h-1.5 w-1.5 rounded-full bg-gray-300;
+  }
+
+  .stat-card-brand .stat-card-indicator { @apply bg-brand; }
+  .stat-card-success .stat-card-indicator { @apply bg-green-500; }
+  .stat-card-warning .stat-card-indicator { @apply bg-amber-500; }
+  .stat-card-danger .stat-card-indicator { @apply bg-red-500; }
+
+  .dashboard-overview {
+    @apply grid gap-4 rounded-xl border border-green-100 bg-[linear-gradient(105deg,#f5fcf7_0%,#ffffff_62%)] p-5 md:grid-cols-[minmax(190px,0.72fr)_minmax(0,1.5fr)] md:items-center;
+  }
+
+  .dashboard-overview-heading > span {
+    @apply text-xs font-extrabold uppercase tracking-[0.12em] text-brand;
+  }
+
+  .dashboard-overview-heading p {
+    @apply mt-1 text-sm leading-5 text-text-secondary;
+  }
+
+  .dashboard-overview-items {
+    @apply grid gap-3 sm:grid-cols-3;
+  }
+
+  .dashboard-overview-item {
+    @apply flex items-start gap-2.5 rounded-lg border border-green-100/70 bg-card p-3;
+  }
+
+  .dashboard-overview-item > div {
+    @apply grid gap-0.5;
+  }
+
+  .dashboard-overview-item strong {
+    @apply text-sm font-bold text-text-primary;
+  }
+
+  .dashboard-overview-item span:not(.dashboard-overview-dot) {
+    @apply text-xs leading-5 text-text-secondary;
+  }
+
+  .dashboard-overview-dot {
+    @apply mt-1.5 h-2 w-2 shrink-0 rounded-full;
+  }
+
+  .dashboard-overview-dot-clear { @apply bg-green-500; }
+  .dashboard-overview-dot-attention { @apply bg-amber-500; }
+
+  .data-table-scroll {
+    @apply overflow-x-auto;
+  }
+
+  .data-table-scroll:focus-visible {
+    @apply outline-none ring-4 ring-brand/10;
+  }
 }
 
 @media (max-width: 640px) {
@@ -175,6 +251,24 @@
 
   .actions-cell {
     min-width: 112px;
+  }
+
+  .page-header {
+    align-items: flex-start;
+  }
+
+  .page-header-side {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .page-header-context {
+    max-width: none;
+    text-align: left;
+  }
+
+  .dashboard-overview-items {
+    grid-template-columns: 1fr;
   }
 }
 

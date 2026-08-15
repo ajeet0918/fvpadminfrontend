@@ -18,10 +18,10 @@ const toneClassMap: Record<NonNullable<StatCardProps["tone"]>, string> = {
 
 export function StatCard({ label, value, icon, hint, tone = "neutral" }: StatCardProps) {
   return (
-    <article className={`stat-card ${toneClassMap[tone]}`}>
+    <article className={`stat-card stat-card-${tone} ${toneClassMap[tone]}`}>
       <div className="stat-card-layout">
         <div className="stat-card-copy">
-          <p className="stat-card-label">{label}</p>
+          <p className="stat-card-label"><span className="stat-card-indicator" aria-hidden="true" />{label}</p>
           <p className="stat-card-value">{value}</p>
           {hint ? <p className="stat-card-hint">{hint}</p> : null}
         </div>
