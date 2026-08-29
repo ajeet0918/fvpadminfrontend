@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from "@mui/material";
 import { Link, useParams } from "react-router-dom";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
+import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
+import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import UpdateRoundedIcon from "@mui/icons-material/UpdateRounded";
 import { ConfirmationDialog } from "../components/ConfirmationDialog";
 import { PageHeader } from "../components/PageHeader";
@@ -53,6 +60,11 @@ function formatCurrency(value: number | null, currency = "INR") {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(value);
 }
 
+function formatDateTime(value: string | null) {
+  if (!value) return "Not recorded";
+  return new Date(value).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+}
+
 export function OrderDetailPage() {
   const params = useParams<{ id: string }>();
   const orderId = Number(params.id);
@@ -76,6 +88,9 @@ export function OrderDetailPage() {
   const [paymentReference, setPaymentReference] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
   const [cancellationNote, setCancellationNote] = useState("");
+  const [manualRefundDialogOpen, setManualRefundDialogOpen] = useState(false);
+  const [manualRefundId, setManualRefundId] = useState<number | null>(null);
+  const [manualRefundReference, setManualRefundReference] = useState("");
 
   const canSaveQuote = useMemo(() => {
     if (!order) return false;
@@ -240,13 +255,19 @@ export function OrderDetailPage() {
     }
   }
 
-  async function completeManualRefund(refundId: number) {
-    const reference = window.prompt("Enter the bank transfer reference/UTR:");
-    if (!reference?.trim()) return;
+  function initiateManualRefund(refundId: number) {
+    setManualRefundId(refundId);
+    setManualRefundReference("");
+    setManualRefundDialogOpen(true);
+  }
+
+  async function completeManualRefund() {
+    if (!manualRefundId || !manualRefundReference.trim()) return;
     setActionLoading(true);
     setErrorMessage(null);
     try {
-      await completeManualRefundApi(orderId, refundId, { reference: reference.trim() });
+      await completeManualRefundApi(orderId, manualRefundId, { reference: manualRefundReference.trim() });
+      setManualRefundDialogOpen(false);
       await loadOrder();
     } catch (error) {
       setErrorMessage(readErrorMessage(error, "Unable to complete manual refund."));
@@ -277,23 +298,74 @@ export function OrderDetailPage() {
     <section className="admin-page">
       <PageHeader
         title={`Order ${order.orderNumber}`}
-        subtitle="Review pricing, customer details, and fulfilment progress for this order."
-        actions={<Link className="button-link button-link-secondary button-small" to="/orders">Back To Orders</Link>}
+        subtitle="Review the customer, pricing, payment, and fulfilment workflow from one operational view."
+        eyebrow="Commerce / Order detail"
+        context={`Created ${formatDateTime(order.createdAt)}`}
+        actions={(
+          <Link className="button-link button-link-secondary button-small" to="/orders">
+            <ArrowBackRoundedIcon fontSize="small" />
+            Back to orders
+          </Link>
+        )}
       />
       {errorMessage ? <ErrorBanner message={errorMessage} /> : null}
 
-      <div className="order-summary-grid">
-        <div><span>Status</span><strong>{formatEnumLabel(order.status)}</strong></div>
-        <div><span>Payment</span><strong>{formatEnumLabel(paymentStatus)}</strong></div>
-        <div><span>Company</span><strong>{order.companyName}</strong></div>
-        <div><span>Total</span><strong>{formatCurrency(order.totalAmount, order.currency)}</strong></div>
+      <div className="order-overview-card">
+        <div className="order-overview-primary">
+          <div className="order-overview-title-row">
+            <div>
+              <span className="order-overview-kicker">Order value</span>
+              <strong className="order-overview-total">{formatCurrency(order.totalAmount, order.currency)}</strong>
+            </div>
+            <div className="order-overview-badges">
+              <StatusBadge label={formatEnumLabel(order.status)} tone={getOrderStatusTone(order.status)} />
+              <StatusBadge label={`Payment ${formatEnumLabel(paymentStatus)}`} tone={paymentStatus === "PAID" ? "success" : paymentStatus === "FAILED" ? "danger" : "warning"} />
+            </div>
+          </div>
+          <p>{order.companyName || order.fullName} · {order.items.length} line item{order.items.length === 1 ? "" : "s"}</p>
+        </div>
+        <div className="order-overview-metrics">
+          <div><CalendarMonthOutlinedIcon /><span>Placed</span><strong>{formatDateTime(order.createdAt)}</strong></div>
+          <div><PaymentsOutlinedIcon /><span>Payment method</span><strong>{formatEnumLabel(order.paymentMethod)}</strong></div>
+          <div><Inventory2OutlinedIcon /><span>Quote reference</span><strong>{order.quoteReference || "Not quoted"}</strong></div>
+        </div>
+      </div>
+
+      <div className="order-workspace-grid">
+        <div className="order-workspace-main">
+      <div className="admin-form-card order-customer-card">
+        <div className="section-heading-row">
+          <div className="order-section-heading">
+            <span className="order-section-icon"><PersonOutlineRoundedIcon fontSize="small" /></span>
+            <div>
+            <h3>Customer &amp; delivery details</h3>
+            <p>Contact information and shipping address for this order.</p>
+            </div>
+          </div>
+        </div>
+        <div className="order-contact-grid">
+          <div><span>Customer</span><strong>{order.fullName}</strong><small>{order.companyName || "Individual customer"}</small></div>
+          <a href={`mailto:${order.email}`}><span>Email address</span><strong>{order.email}</strong><small>Send an email</small></a>
+          <a href={`tel:${order.phone}`}><span>Phone number</span><strong>{order.phone}</strong><small>Call customer</small></a>
+        </div>
+        <div className="order-delivery-panel">
+          <span className="order-section-icon"><LocalShippingOutlinedIcon fontSize="small" /></span>
+          <div>
+            <span>Deliver to</span>
+            <address>{order.deliveryAddress}<br />{order.city}, {order.state} {order.postalCode}</address>
+            {order.customerNotes ? <p><strong>Customer note:</strong> {order.customerNotes}</p> : null}
+          </div>
+        </div>
       </div>
 
       <div className="admin-form-card payment-management-card">
         <div className="section-heading-row">
-          <div>
+          <div className="order-section-heading">
+            <span className="order-section-icon"><PaymentsOutlinedIcon fontSize="small" /></span>
+            <div>
             <h3>Payment and refunds</h3>
             <p>Payment confirmation and refund progress are tracked separately from fulfilment.</p>
+            </div>
           </div>
           <div className="payment-badge-group">
             <StatusBadge label={`Payment ${formatEnumLabel(paymentStatus)}`} tone={paymentStatus === "PAID" ? "success" : paymentStatus === "FAILED" ? "danger" : "warning"} />
@@ -365,7 +437,7 @@ export function OrderDetailPage() {
                   <StatusBadge label={formatEnumLabel(refund.status)} tone={refund.status === "SUCCESS" ? "success" : refund.status === "FAILED" || refund.status === "CANCELLED" ? "danger" : "warning"} />
                   <small>{new Date(refund.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</small>
                   {refund.refundMethod === "BANK_TRANSFER" && ["PENDING", "ONHOLD"].includes(refund.status) && canManageRefunds ? (
-                    <button type="button" className="button-link button-small" disabled={actionLoading} onClick={() => void completeManualRefund(refund.id)}>Complete refund</button>
+                    <button type="button" className="button-link button-small" disabled={actionLoading} onClick={() => initiateManualRefund(refund.id)}>Complete refund</button>
                   ) : null}
                 </div>
               </div>
@@ -374,15 +446,27 @@ export function OrderDetailPage() {
         ) : null}
       </div>
 
-      <div className="admin-form-card">
-        <h3>Pricing</h3>
-        <div className="row">
+      <div className="admin-form-card order-pricing-card">
+        <div className="section-heading-row">
+          <div className="order-section-heading">
+            <span className="order-section-icon"><Inventory2OutlinedIcon fontSize="small" /></span>
+            <div>
+              <h3>Pricing and line items</h3>
+              <p>Set commercial terms, verify each product, and save the customer quote.</p>
+            </div>
+          </div>
+          <button type="button" className="button-link" onClick={() => void saveQuote()} disabled={actionLoading || !canSaveQuote}>
+            {actionLoading ? "Saving..." : "Save pricing"}
+          </button>
+        </div>
+
+        <div className="row order-pricing-controls">
           <label>
-            Shipping
+            <span>Shipping amount</span>
             <input type="number" min="0" value={shippingAmount} onChange={(event) => setShippingAmount(event.target.value)} />
           </label>
           <label>
-            Tax Override (optional)
+            <span>Tax override <small>Optional</small></span>
             <input
               type="number"
               min="0"
@@ -392,7 +476,7 @@ export function OrderDetailPage() {
             />
           </label>
           <label>
-            Discount Override (optional)
+            <span>Discount override <small>Optional</small></span>
             <input
               type="number"
               min="0"
@@ -403,44 +487,62 @@ export function OrderDetailPage() {
           </label>
         </div>
 
-        {order.items.map((item) => (
-          <div key={item.id} className="row item-row item-pricing-grid">
-            <span>{item.productName} ({item.quantity} {item.unit})</span>
-            <input
-              type="number"
-              min="0"
-              value={itemPrices[item.id] ?? "0"}
-              placeholder="Unit Price"
-              onChange={(event) =>
-                setItemPrices((current) => ({ ...current, [item.id]: event.target.value }))
-              }
-            />
-            <input
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={itemTaxRates[item.id] ?? "0"}
-              onChange={(event) =>
-                setItemTaxRates((current) => ({ ...current, [item.id]: event.target.value }))
-              }
-              placeholder="Tax %"
-            />
-            <input
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={itemDiscountRates[item.id] ?? "0"}
-              onChange={(event) =>
-                setItemDiscountRates((current) => ({ ...current, [item.id]: event.target.value }))
-              }
-              placeholder="Discount %"
-            />
-          </div>
-        ))}
+        <div className="order-line-items">
+          {order.items.map((item) => (
+            <div key={item.id} className="order-line-item">
+              <div className="order-line-item-product">
+                <span>{item.productName}</span>
+                <small>{item.quantity} {item.unit} · MOQ {item.moqSnapshot || "—"}</small>
+              </div>
+              <label>
+                <span>Unit price</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={itemPrices[item.id] ?? "0"}
+                  placeholder="0.00"
+                  onChange={(event) =>
+                    setItemPrices((current) => ({ ...current, [item.id]: event.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                <span>Tax %</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={itemTaxRates[item.id] ?? "0"}
+                  onChange={(event) =>
+                    setItemTaxRates((current) => ({ ...current, [item.id]: event.target.value }))
+                  }
+                  placeholder="0"
+                />
+              </label>
+              <label>
+                <span>Discount %</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={itemDiscountRates[item.id] ?? "0"}
+                  onChange={(event) =>
+                    setItemDiscountRates((current) => ({ ...current, [item.id]: event.target.value }))
+                  }
+                  placeholder="0"
+                />
+              </label>
+              <div className="order-line-item-total">
+                <span>Current total</span>
+                <strong>{formatCurrency(item.lineTotal, order.currency)}</strong>
+              </div>
+            </div>
+          ))}
+        </div>
 
-        <div className="order-summary-grid">
+        <div className="order-summary-grid order-pricing-summary">
           <div><span>Subtotal</span><strong>{formatCurrency(order.subtotalAmount, order.currency)}</strong></div>
           <div><span>Discount</span><strong>{formatCurrency(order.discountAmount, order.currency)}</strong></div>
           <div>
@@ -449,17 +551,18 @@ export function OrderDetailPage() {
           </div>
           <div><span>Total</span><strong>{formatCurrency(order.totalAmount, order.currency)}</strong></div>
         </div>
-
-        <button type="button" className="button-link" onClick={() => void saveQuote()} disabled={actionLoading || !canSaveQuote}>
-          {actionLoading ? "Saving..." : "Save Pricing"}
-        </button>
       </div>
 
+        </div>
+        <aside className="order-workspace-rail">
       <div className="admin-form-card order-status-card">
         <div className="section-heading-row">
-          <div>
+          <div className="order-section-heading">
+            <span className="order-section-icon"><LocalShippingOutlinedIcon fontSize="small" /></span>
+            <div>
             <h3>Order status</h3>
             <p>Update fulfilment progress and leave an internal note for the operations team.</p>
+            </div>
           </div>
           <StatusBadge label={formatEnumLabel(order.status)} tone={getOrderStatusTone(order.status)} />
         </div>
@@ -550,6 +653,8 @@ export function OrderDetailPage() {
           </div>
         </div>
       </div>
+        </aside>
+      </div>
 
       <RefundDialog
         open={refundDialogOpen}
@@ -570,6 +675,24 @@ export function OrderDetailPage() {
         onConfirm={() => void updateStatus("CANCELLED")}
         onCancel={() => setCancelConfirmationOpen(false)}
       />
+      <Dialog open={manualRefundDialogOpen} onClose={() => setManualRefundDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Complete Manual Refund</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Bank transfer reference / UTR"
+            fullWidth
+            value={manualRefundReference}
+            onChange={(e) => setManualRefundReference(e.target.value)}
+            placeholder="Enter the bank transfer reference or UTR number"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setManualRefundDialogOpen(false)} disabled={actionLoading}>Cancel</Button>
+          <Button onClick={() => void completeManualRefund()} variant="contained" disabled={actionLoading || !manualRefundReference.trim()}>Confirm</Button>
+        </DialogActions>
+      </Dialog>
     </section>
   );
 }
