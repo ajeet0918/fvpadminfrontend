@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import MenuOpenRoundedIcon from "@mui/icons-material/MenuOpenRounded";
@@ -65,9 +65,11 @@ export function AdminLayout() {
   const currentModule = getCurrentModule(location.pathname);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const contentViewportRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setMobileSidebarOpen(false);
+    contentViewportRef.current?.scrollTo({ top: 0, left: 0 });
   }, [location.pathname]);
 
   function logout() {
@@ -76,7 +78,8 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-app text-text-primary">
+    <div className="admin-app-shell bg-app text-text-primary">
+      <a className="admin-skip-link" href="#admin-main-content">Skip to workspace content</a>
       {mobileSidebarOpen ? (
         <button
           type="button"
@@ -87,7 +90,8 @@ export function AdminLayout() {
       ) : null}
 
       <aside
-        className={`admin-sidebar fixed inset-y-0 left-0 z-40 w-64 transition-[transform,width] duration-300 ease-in-out lg:static lg:translate-x-0 ${
+        id="admin-navigation"
+        className={`admin-sidebar admin-sidebar-shell fixed inset-y-0 left-0 z-40 w-64 transition-[transform,width] duration-300 ease-in-out lg:static lg:translate-x-0 ${
           sidebarCollapsed ? "lg:w-20" : "lg:w-64"
         } ${
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -115,6 +119,7 @@ export function AdminLayout() {
                 type="button"
                 className="hidden shrink-0 rounded-md p-1.5 text-white/70 hover:bg-white/10 hover:text-white lg:inline-flex"
                 aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-expanded={!sidebarCollapsed}
                 onClick={() => setSidebarCollapsed((prev) => !prev)}
               >
                 {sidebarCollapsed ? <MenuRoundedIcon fontSize="small" /> : <MenuOpenRoundedIcon fontSize="small" />}
@@ -123,6 +128,8 @@ export function AdminLayout() {
                 type="button"
                 className="inline-flex shrink-0 rounded-md p-1.5 text-white/70 hover:bg-white/10 hover:text-white lg:hidden"
                 aria-label="Close navigation"
+                aria-controls="admin-navigation"
+                aria-expanded={mobileSidebarOpen}
                 onClick={() => setMobileSidebarOpen(false)}
               >
                 <CloseRoundedIcon fontSize="small" />
@@ -130,7 +137,7 @@ export function AdminLayout() {
             </div>
           </div>
 
-          <nav className="flex-1 overflow-auto px-2 py-3" aria-label="Admin navigation">
+          <nav className="admin-sidebar-nav flex-1 px-2 py-3" aria-label="Admin navigation">
             {navSections.map((section) => (
               <div key={section.label} className="mb-4">
                 <p className={`admin-nav-section-label ${sidebarCollapsed ? "lg:hidden" : ""}`}>
@@ -189,7 +196,7 @@ export function AdminLayout() {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="admin-workspace-shell">
         <header className="admin-topbar">
           <div className="flex min-h-[60px] items-center justify-between gap-3 px-4 md:px-6">
             <div className="flex items-center gap-2">
@@ -197,6 +204,8 @@ export function AdminLayout() {
                 type="button"
                 className="button-link button-link-secondary button-small lg:hidden"
                 aria-label="Open sidebar"
+                aria-controls="admin-navigation"
+                aria-expanded={mobileSidebarOpen}
                 onClick={() => setMobileSidebarOpen(true)}
               >
                 <MenuRoundedIcon fontSize="small" />
@@ -226,7 +235,12 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-auto">
+        <main
+          ref={contentViewportRef}
+          id="admin-main-content"
+          className="admin-content-viewport"
+          tabIndex={-1}
+        >
           <div className="admin-main-content">
             <Outlet />
           </div>

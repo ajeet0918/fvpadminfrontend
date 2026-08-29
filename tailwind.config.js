@@ -4,23 +4,23 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: "#166534",
-        "brand-light": "#DCFCE7",
-        app: "#F9FAFB",
+        brand: "#147A46",
+        "brand-light": "#EAF7EF",
+        app: "#F5F8F6",
         card: "#FFFFFF",
-        border: "#E5E7EB",
-        "text-primary": "#111827",
-        "text-secondary": "#6B7280",
+        border: "#DCE7E0",
+        "text-primary": "#17261E",
+        "text-secondary": "#607269",
         success: "#16A34A",
         warning: "#F59E0B",
         danger: "#DC2626"
       },
       boxShadow: {
-        card: "0 1px 2px rgba(17, 24, 39, 0.06), 0 8px 16px rgba(17, 24, 39, 0.04)"
+        card: "0 1px 2px rgba(15, 47, 30, 0.04), 0 10px 28px rgba(15, 47, 30, 0.06)"
       },
       borderRadius: {
-        lg: "8px",
-        xl: "8px"
+        lg: "12px",
+        xl: "16px"
       }
     },
   },

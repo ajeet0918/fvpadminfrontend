@@ -14,7 +14,7 @@ type ChartProps = {
 };
 
 const chartColorMap: Record<NonNullable<ChartDataPoint["tone"]>, string> = {
-  brand: "#166534",
+  brand: "#147a46",
   success: "#16a34a",
   warning: "#f59e0b",
   danger: "#dc2626",

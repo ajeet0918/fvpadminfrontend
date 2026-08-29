@@ -83,8 +83,10 @@ export function DashboardPage() {
 function DashboardHeader() {
   return (
     <PageHeader
+      eyebrow="Operations control centre"
       title="Operations dashboard"
       subtitle="Monitor order flow, sales workload, catalog readiness, and work requiring attention."
+      context={<span>Use the queue to focus the team on the next action.</span>}
       actions={(
         <>
           <Link className="button-link" to="/orders">
@@ -110,6 +112,7 @@ function DashboardContent({ data }: { data: DashboardData }) {
   return (
     <>
       <DashboardMetricCards metrics={metrics} />
+      <DashboardOverview metrics={metrics} />
       <div className="dashboard-primary-grid">
         <ChartPanel title="Order activity" description="Orders created during the last seven days.">
           <ColumnChart
@@ -131,6 +134,34 @@ function DashboardContent({ data }: { data: DashboardData }) {
         </ChartPanel>
       </div>
     </>
+  );
+}
+
+function DashboardOverview({ metrics }: { metrics: DashboardMetrics }) {
+  const items = [
+    { label: "Order review", detail: metrics.pendingReview === 0 ? "No orders waiting" : `${metrics.pendingReview} order${metrics.pendingReview === 1 ? "" : "s"} need review`, tone: metrics.pendingReview > 0 ? "attention" : "clear" },
+    { label: "Customer follow-up", detail: metrics.unassignedInquiries === 0 ? "All inquiries assigned" : `${metrics.unassignedInquiries} ${metrics.unassignedInquiries === 1 ? "inquiry" : "inquiries"} without an owner`, tone: metrics.unassignedInquiries > 0 ? "attention" : "clear" },
+    { label: "Catalog health", detail: metrics.inactiveProducts === 0 ? "All products active" : `${metrics.inactiveProducts} inactive listing${metrics.inactiveProducts === 1 ? "" : "s"}`, tone: metrics.inactiveProducts > 0 ? "attention" : "clear" }
+  ];
+
+  return (
+    <section className="dashboard-overview" aria-label="Operations overview">
+      <div className="dashboard-overview-heading">
+        <span>Today’s focus</span>
+        <p>Review the signals below before moving into the work queue.</p>
+      </div>
+      <div className="dashboard-overview-items">
+        {items.map((item) => (
+          <div className="dashboard-overview-item" key={item.label}>
+            <span className={`dashboard-overview-dot dashboard-overview-dot-${item.tone}`} aria-hidden="true" />
+            <div>
+              <strong>{item.label}</strong>
+              <span>{item.detail}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
