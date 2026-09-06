@@ -160,7 +160,7 @@ export function PayoutCenterPage() {
       {loading ? <LoadingState label="Loading payout data..." /> : null}
 
       {!loading ? (
-        <DataTable isEmpty={payouts.length === 0} emptyText="No payouts found.">
+        <DataTable recordCount={payouts.length} isEmpty={payouts.length === 0} emptyText="No payouts found.">
           <thead>
             <tr>
               <th>Payout Ref</th>

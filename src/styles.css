@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    color: #111827;
+    color: #192b24;
     font-family: Inter, Manrope, "Segoe UI", sans-serif;
   }
 
@@ -39,16 +39,61 @@
     @apply grid min-h-screen place-items-center bg-app p-6;
   }
 
+  .admin-shell {
+    @apply flex h-screen overflow-hidden bg-app text-text-primary;
+    height: 100dvh;
+  }
+
+  .admin-workspace {
+    @apply flex min-h-0 min-w-0 flex-1 flex-col;
+  }
+
+  .admin-main {
+    @apply min-h-0 flex-1 overflow-hidden outline-none;
+  }
+
+  .skip-navigation {
+    @apply fixed left-4 top-4 z-50 -translate-y-24 rounded-lg bg-brand px-4 py-3 font-semibold text-white focus:translate-y-0;
+  }
+
   .admin-main-content {
-    @apply mx-auto min-h-full w-full max-w-[1500px] p-4 md:p-6 lg:px-8 lg:py-7;
+    @apply mx-auto h-full min-h-0 w-full max-w-[1500px] overflow-hidden p-4 md:p-6 lg:px-8 lg:py-7;
   }
 
   .admin-page {
-    @apply flex flex-col gap-4 md:gap-5;
+    @apply flex h-full min-h-0 flex-col gap-4 overflow-auto overscroll-contain md:gap-5;
+  }
+
+  .admin-page > * {
+    @apply shrink-0;
+  }
+
+  .admin-page:has(.form-action-bar) {
+    scroll-padding-bottom: 9rem;
+  }
+
+  /* Keep search controls above the results; allow page scrolling on short screens. */
+  .admin-page > :is(.data-table-panel, .data-table-wrap):not(.dashboard-table) {
+    @apply min-h-48;
+    flex: 1 1 auto;
+  }
+
+  .admin-page > .admin-form-card:has(> .section-table-scroll) {
+    @apply flex flex-col;
+    flex: 1 1 auto;
+  }
+
+  .admin-page > .admin-form-card:has(> .section-table-scroll) > * {
+    @apply shrink-0;
+  }
+
+  .admin-page > .admin-form-card > .section-table-scroll {
+    @apply h-0 min-h-32 max-h-none;
+    flex: 1 1 auto;
   }
 
   .page-header {
-    @apply flex flex-col gap-4 border-b border-border pb-5 md:flex-row md:items-start md:justify-between;
+    @apply flex flex-col gap-3 pb-1 md:flex-row md:items-center md:justify-between;
   }
 
   .page-header-copy {
@@ -56,11 +101,11 @@
   }
 
   .page-header-copy h1 {
-    @apply m-0 text-2xl font-semibold leading-tight text-text-primary;
+    @apply m-0 text-[1.625rem] font-semibold leading-tight tracking-[-0.035em] text-text-primary;
   }
 
   .page-header-copy p {
-    @apply mb-0 mt-1.5 max-w-3xl text-sm leading-6 text-text-secondary;
+    @apply mb-0 mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary;
   }
 
   .page-actions {
@@ -68,12 +113,12 @@
   }
 
   .button-link {
-    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-transparent bg-brand px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#14532d] focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-transparent bg-brand px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#114d37] focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .button-link-secondary,
   .button-muted {
-    @apply border border-border bg-white text-text-primary hover:bg-gray-50;
+    @apply border border-border bg-white text-text-primary hover:border-[#b7c8be] hover:bg-gray-50;
   }
 
   .button-danger {
@@ -81,7 +126,7 @@
   }
 
   .button-small {
-    @apply min-h-8 px-2.5 py-1.5 text-xs;
+    @apply min-h-8 rounded-md px-2.5 py-1.5 text-xs;
   }
 
   .icon-button {
@@ -101,15 +146,18 @@
   }
 
   .login-shell {
-    @apply grid min-h-screen place-items-center bg-app p-5;
+    @apply grid h-screen overflow-auto bg-app p-5;
+    height: 100dvh;
+    justify-items: center;
+    align-items: safe center;
   }
 
   .login-card {
-    @apply w-full max-w-md rounded-lg border border-border bg-card p-7 shadow-card;
+    @apply w-full max-w-md rounded-xl border border-border bg-card p-7 shadow-card sm:p-9;
   }
 
   .login-card-elevated {
-    @apply shadow-[0_18px_44px_rgba(17,24,39,0.1)];
+    @apply shadow-[0_20px_70px_-25px_rgba(25,43,36,0.18)];
   }
 
   .login-card-header {
@@ -121,19 +169,37 @@
   }
 
   .admin-sidebar {
-    @apply border-r border-[#29352d] bg-[#18201b] text-white;
+    @apply shrink-0 border-r border-[#253d32] bg-[#142c22] text-white;
+  }
+
+  .admin-brand {
+    @apply shrink-0 border-b border-white/10 px-4 py-4;
+  }
+
+  .admin-navigation {
+    @apply min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-5;
+    scrollbar-width: thin;
+    scrollbar-color: #436052 transparent;
+  }
+
+  .admin-nav-section + .admin-nav-section {
+    @apply mt-5;
+  }
+
+  .admin-sidebar-footer {
+    @apply shrink-0 border-t border-white/10 p-3;
   }
 
   .admin-nav-section-label {
-    @apply mb-1.5 px-3 text-[0.68rem] font-semibold uppercase text-white/45;
+    @apply mb-2 px-3 text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-white/50;
   }
 
   .admin-nav-item {
-    @apply mb-0.5 flex min-h-10 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-white/75 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-green-400;
+    @apply mb-1 flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-white/75 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-green-400;
   }
 
   .admin-nav-item.active {
-    @apply bg-white/10 text-white shadow-[inset_3px_0_0_#22c55e];
+    @apply bg-[#24543f] text-white shadow-[inset_3px_0_0_#9bcead];
   }
 
   .admin-logout-button {
@@ -141,15 +207,19 @@
   }
 
   .admin-topbar {
-    @apply sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur;
+    @apply sticky top-0 z-20 shrink-0 border-b border-border bg-card/95 backdrop-blur;
+  }
+
+  .admin-topbar-inner {
+    @apply flex min-h-16 items-center justify-between gap-3 px-4 md:px-6 lg:px-8;
   }
 
   .admin-topbar-actions {
-    @apply flex items-center gap-2;
+    @apply flex shrink-0 items-center gap-2;
   }
 
   .admin-user-chip {
-    @apply hidden min-h-8 max-w-52 items-center gap-2 rounded-md border border-border bg-gray-50 px-2.5 py-1 text-xs font-medium text-text-secondary sm:inline-flex;
+    @apply hidden min-h-9 max-w-52 items-center gap-2 rounded-full border border-border bg-app px-3 py-1 text-sm font-medium text-text-primary sm:inline-flex;
   }
 
   .admin-user-chip span {
@@ -157,15 +227,19 @@
   }
 
   .admin-workspace-label {
-    @apply grid leading-tight;
+    @apply flex min-w-0 items-center gap-2.5 leading-tight;
   }
 
   .admin-workspace-label span {
-    @apply text-[0.68rem] font-semibold uppercase text-text-secondary;
+    @apply hidden text-xs font-medium text-text-secondary sm:inline;
   }
 
   .admin-workspace-label strong {
-    @apply text-sm font-semibold text-text-primary;
+    @apply truncate text-sm font-semibold text-text-primary;
+  }
+
+  .admin-workspace-label .admin-breadcrumb-separator {
+    @apply text-border;
   }
 
   .login-footnote {
@@ -200,12 +274,13 @@
     @apply flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-800;
   }
 
-  .form-page-card {
+  .admin-form-card.form-page-card {
     @apply w-full max-w-[1120px] overflow-visible p-0;
   }
 
   .form-card-header {
-    @apply border-b border-border px-4 py-4 md:px-6;
+    @apply border-b border-border bg-[#fafcfb] px-5 py-5 md:px-7;
+    border-radius: 12px 12px 0 0;
   }
 
   .form-card-header h2 {
@@ -217,11 +292,11 @@
   }
 
   .admin-edit-form {
-    @apply grid gap-6 px-4 py-5 md:px-6;
+    @apply grid gap-7 px-5 py-6 md:px-7;
   }
 
   .form-section {
-    @apply border-t border-border pt-5;
+    @apply border-t border-border pt-7;
   }
 
   .admin-edit-form > .form-section:first-child {
@@ -230,6 +305,10 @@
 
   .form-section-header {
     @apply mb-4 flex flex-col gap-2 md:flex-row md:items-start md:justify-between;
+  }
+
+  .form-section-content {
+    @apply min-w-0;
   }
 
   .form-section-header h3 {
@@ -241,7 +320,8 @@
   }
 
   .form-action-bar {
-    @apply -mx-4 -mb-5 flex flex-col gap-3 border-t border-border bg-gray-50 px-4 py-4 md:-mx-6 md:flex-row md:items-center md:justify-between md:px-6;
+    @apply sticky bottom-0 z-10 -mx-5 -mb-6 flex flex-col gap-3 border-t border-border bg-white px-5 py-4 md:-mx-7 md:flex-row md:items-center md:justify-between md:px-7;
+    box-shadow: 0 -6px 20px -12px rgba(25, 43, 36, 0.2);
   }
 
   .form-primary-actions {
@@ -273,7 +353,7 @@
   }
 
   .stat-card {
-    @apply min-w-0 rounded-lg border p-4 shadow-card;
+    @apply min-w-0 rounded-lg border p-5 shadow-card;
   }
 
   .stat-card-layout {
@@ -285,11 +365,11 @@
   }
 
   .stat-card-label {
-    @apply m-0 text-xs font-semibold uppercase text-text-secondary;
+    @apply m-0 text-xs font-semibold tracking-wide text-text-secondary;
   }
 
   .stat-card-value {
-    @apply mb-0 mt-2 text-3xl font-bold leading-none text-text-primary;
+    @apply mb-0 mt-3 text-[2rem] font-semibold leading-none tracking-tight text-text-primary;
   }
 
   .stat-card-hint {
@@ -297,7 +377,7 @@
   }
 
   .stat-card-icon {
-    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-black/5 bg-white/70 text-brand;
+    @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-black/5 bg-white/70 text-brand;
   }
 
   .dashboard-primary-grid {
@@ -387,7 +467,7 @@
   }
 
   .chart-empty-state {
-    @apply grid min-h-56 place-content-center gap-1 rounded-lg border border-dashed border-border bg-gray-50 p-5 text-center;
+    @apply grid min-h-56 place-content-center gap-2 rounded-lg border border-dashed border-border bg-[#fafcfb] p-5 text-center;
   }
 
   .chart-empty-state strong {
@@ -671,7 +751,7 @@
   }
 
   .table-toolbar label {
-    @apply grid gap-1 text-sm font-medium text-text-secondary;
+    @apply grid gap-1.5 text-xs font-semibold text-text-secondary;
   }
 
   .table-toolbar input,
@@ -683,7 +763,7 @@
   .table-toolbar select:focus,
   .filter-grid input:focus,
   .filter-grid select:focus {
-    @apply border-brand outline-none ring-2 ring-brand/15;
+    @apply border-brand outline-none ring-[3px] ring-brand/10;
   }
 
   .filter-grid-4 {
@@ -697,7 +777,7 @@
   .filter-grid label,
   .admin-form-card label:not(.inline-checkbox),
   .login-card label {
-    @apply grid gap-1 text-sm font-medium text-text-secondary;
+    @apply grid gap-1.5 text-xs font-semibold text-text-secondary;
   }
 
   .filter-grid input,
@@ -716,7 +796,7 @@
   .admin-form-card input:not([type="checkbox"]):focus,
   .admin-form-card textarea:focus,
   .admin-form-card select:focus {
-    @apply border-brand outline-none ring-2 ring-brand/15;
+    @apply border-brand outline-none ring-[3px] ring-brand/10;
   }
 
   .admin-form-card input:disabled,
@@ -1022,8 +1102,26 @@
     @apply flex flex-col gap-2 md:flex-row md:items-center md:justify-between;
   }
 
+  .data-table-panel {
+    @apply flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-card;
+  }
+
+  .data-table-panel > .data-table-wrap {
+    @apply min-h-0 flex-1 rounded-none border-0 shadow-none;
+  }
+
+  .data-table-footer {
+    @apply flex shrink-0 items-center gap-1 border-t border-border bg-[#fafcfb] px-4 py-2.5 text-xs text-text-secondary;
+  }
+
+  .data-table-footer strong {
+    @apply font-semibold text-text-primary;
+  }
+
   .data-table-wrap {
-    @apply overflow-x-auto rounded-lg border border-border bg-card shadow-card;
+    @apply min-w-0 overflow-auto overscroll-contain rounded-lg border border-border bg-card shadow-card;
+    scrollbar-width: thin;
+    scrollbar-color: #afbeb5 #f4f6f5;
   }
 
   .section-table-scroll {
@@ -1031,7 +1129,7 @@
   }
 
   .module-form-scroll {
-    @apply min-h-0 overflow-auto;
+    @apply overflow-visible;
   }
 
   .data-table {
@@ -1051,8 +1149,21 @@
     @apply bg-green-50/40;
   }
 
+  .data-table thead {
+    @apply sticky top-0 z-10;
+  }
+
   .data-table th {
-    @apply bg-gray-50 text-xs font-semibold uppercase text-text-secondary;
+    @apply bg-[#f1f5f3] text-[0.6875rem] font-semibold uppercase tracking-[0.05em] text-text-secondary;
+    box-shadow: inset 0 -1px 0 #dfe6e2;
+  }
+
+  .data-table tbody tr:focus-within {
+    @apply bg-brand-light;
+  }
+
+  .data-table-wrap:focus-visible {
+    @apply outline-none ring-2 ring-inset ring-brand;
   }
 
   .data-table tbody tr:last-child td {
@@ -1072,11 +1183,16 @@
   }
 
   .empty-state {
-    @apply grid min-h-48 place-content-center justify-items-center gap-1 p-6 text-center;
+    @apply grid min-h-48 place-content-center justify-items-center gap-2 p-8 text-center;
+  }
+
+  .data-table-wrap > .empty-state {
+    @apply min-h-full;
   }
 
   .empty-state svg {
-    @apply mb-2 text-gray-400;
+    @apply mb-1 rounded-xl bg-brand-light p-3 text-brand;
+    box-sizing: content-box;
     font-size: 2rem;
   }
 
@@ -1195,5 +1311,43 @@
 
   .confirmation-dialog-actions {
     @apply mt-5 flex flex-wrap justify-end gap-2 border-t border-border pt-4;
+  }
+}
+
+@media (min-width: 1280px) {
+  .form-section:has(> .form-section-header) {
+    display: grid;
+    grid-template-columns: minmax(160px, 0.85fr) minmax(0, 2fr);
+    gap: 2rem;
+  }
+
+  .form-section-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .page-header-copy h1 {
+    font-size: 1.4rem;
+  }
+
+  .form-primary-actions > button {
+    flex: 1 1 auto;
+  }
+
+  .admin-main-content {
+    padding: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

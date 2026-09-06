@@ -479,7 +479,7 @@ export function InvestorListPage() {
             </label>
           </div>
 
-          <DataTable className="section-table-scroll" isEmpty={investors.length === 0} emptyText="No investors found.">
+          <DataTable className="section-table-scroll" recordCount={investors.length} isEmpty={investors.length === 0} emptyText="No investors found.">
               <thead>
                 <tr>
                   <th>Code</th>
@@ -540,7 +540,7 @@ export function InvestorListPage() {
             </label>
           </div>
 
-          <DataTable className="section-table-scroll" isEmpty={investments.length === 0} emptyText="No investments found.">
+          <DataTable className="section-table-scroll" recordCount={investments.length} isEmpty={investments.length === 0} emptyText="No investments found.">
               <thead>
                 <tr>
                   <th>Reference</th>

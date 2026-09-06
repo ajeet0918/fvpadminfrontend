@@ -140,7 +140,7 @@ export function OrdersPage() {
       {loading ? <LoadingState label="Loading orders..." /> : null}
 
       {!loading ? (
-        <DataTable isEmpty={filteredOrders.length === 0} emptyText="No orders match your filters.">
+        <DataTable recordCount={filteredOrders.length} isEmpty={filteredOrders.length === 0} emptyText="No orders match your filters.">
           <thead>
             <tr>
               <th>ID</th>
