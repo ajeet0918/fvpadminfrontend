@@ -101,7 +101,7 @@ export function UserListPage() {
       {loading ? <LoadingState label="Loading users..." /> : null}
 
       {!loading ? (
-        <DataTable isEmpty={filteredUsers.length === 0} emptyText="No users found.">
+        <DataTable recordCount={filteredUsers.length} isEmpty={filteredUsers.length === 0} emptyText="No users found.">
           <thead>
             <tr>
               <th>ID</th>

@@ -109,7 +109,7 @@ export function ProductListPage() {
       {loading ? <LoadingState label="Loading products..." /> : null}
 
       {!loading ? (
-        <DataTable isEmpty={filteredProducts.length === 0} emptyText="No products found.">
+        <DataTable recordCount={filteredProducts.length} isEmpty={filteredProducts.length === 0} emptyText="No products found.">
           <thead>
             <tr>
               <th>ID</th>

@@ -294,7 +294,7 @@ export function MonthlyReturnsPage() {
       {loading ? <LoadingState label="Loading monthly returns..." /> : null}
 
       {!loading ? (
-        <DataTable isEmpty={items.length === 0} emptyText="No return entries found for selected filters.">
+        <DataTable recordCount={items.length} isEmpty={items.length === 0} emptyText="No return entries found for selected filters.">
           <thead>
             <tr>
               <th>Period</th>

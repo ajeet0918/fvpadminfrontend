@@ -115,7 +115,7 @@ export function LeadListPage() {
       {loading ? <LoadingState label="Loading leads..." /> : null}
 
       {!loading ? (
-        <DataTable isEmpty={list.length === 0} emptyText="No leads found.">
+        <DataTable recordCount={list.length} isEmpty={list.length === 0} emptyText="No leads found.">
           <thead>
             <tr>
               <th>ID</th>

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import Drawer from "@mui/material/Drawer";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import MenuOpenRoundedIcon from "@mui/icons-material/MenuOpenRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -63,6 +65,7 @@ export function AdminLayout() {
   const location = useLocation();
   const currentUsername = getCurrentUsername();
   const currentModule = getCurrentModule(location.pathname);
+  const desktop = useMediaQuery("(min-width: 1024px)");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -76,39 +79,45 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-app text-text-primary">
-      {mobileSidebarOpen ? (
-        <button
-          type="button"
-          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
-          aria-label="Close sidebar"
-          onClick={() => setMobileSidebarOpen(false)}
-        />
-      ) : null}
-
-      <aside
-        className={`admin-sidebar fixed inset-y-0 left-0 z-40 w-64 transition-[transform,width] duration-300 ease-in-out lg:static lg:translate-x-0 ${
-          sidebarCollapsed ? "lg:w-20" : "lg:w-64"
-        } ${
-          mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+    <div className="admin-shell">
+      <a href="#admin-main" className="skip-navigation">Skip to content</a>
+      <Drawer
+        variant={desktop ? "permanent" : "temporary"}
+        open={desktop || mobileSidebarOpen}
+        onClose={() => setMobileSidebarOpen(false)}
+        sx={{ width: desktop ? (sidebarCollapsed ? 80 : 256) : 0, flexShrink: 0 }}
+        slotProps={{
+          paper: {
+            id: "admin-navigation",
+            "aria-label": "Admin navigation",
+            className: "admin-sidebar",
+            sx: {
+              width: desktop && sidebarCollapsed ? 80 : 256,
+              position: desktop ? "relative" : "fixed",
+              height: "100%",
+              backgroundColor: "#142c22",
+              color: "#fff",
+              borderRight: "1px solid #253d32"
+            }
+          }
+        }}
       >
-        <div className="flex h-full flex-col">
-          <div className={`border-b border-white/10 py-3 ${sidebarCollapsed ? "px-2" : "px-3"}`}>
-            <div className="flex h-12 items-center justify-between">
-              <div className={`flex min-w-0 items-center ${sidebarCollapsed ? "gap-0" : "gap-3"}`}>
+        <div className="flex h-full min-h-0 flex-col">
+          <div className={`admin-brand ${sidebarCollapsed ? "lg:px-2" : ""}`}>
+            <div className="flex min-h-12 items-center justify-between">
+              <div className={`flex min-w-0 items-center ${sidebarCollapsed ? "gap-3 lg:gap-0" : "gap-3"}`}>
                 <img
                   src="/assets/logofvp.jpeg"
                   alt="FVP Purepick"
-                  className={`shrink-0 rounded-md border border-white/20 object-cover ${sidebarCollapsed ? "h-8 w-8" : "h-10 w-10"}`}
+                  className={`shrink-0 rounded-md border border-white/20 object-cover ${sidebarCollapsed ? "h-10 w-10 lg:h-8 lg:w-8" : "h-10 w-10"}`}
                 />
                 <div
                   className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
-                    sidebarCollapsed ? "max-w-0 opacity-0" : "max-w-[180px] opacity-100"
+                    sidebarCollapsed ? "max-w-[180px] lg:max-w-0 lg:opacity-0" : "max-w-[180px] opacity-100"
                   }`}
                 >
                   <p className="m-0 text-base font-semibold text-white">FVP Purepick</p>
-                  <p className="m-0 text-xs text-white/60">Operations workspace</p>
+                  <p className="m-0 text-xs text-white/60">Admin workspace</p>
                 </div>
               </div>
               <button
@@ -130,10 +139,10 @@ export function AdminLayout() {
             </div>
           </div>
 
-          <nav className="flex-1 overflow-auto px-2 py-3" aria-label="Admin navigation">
+          <nav className="admin-navigation" aria-label="Admin navigation">
             {navSections.map((section) => (
-              <div key={section.label} className="mb-4">
-                <p className={`admin-nav-section-label ${sidebarCollapsed ? "lg:hidden" : ""}`}>
+              <div key={section.label} className="admin-nav-section">
+                <p className={`admin-nav-section-label ${sidebarCollapsed ? "lg:sr-only" : ""}`}>
                   {section.label}
                 </p>
                 {section.items.map((item) => {
@@ -165,7 +174,7 @@ export function AdminLayout() {
             ))}
           </nav>
 
-          <div className="border-t border-white/10 p-3">
+          <div className="admin-sidebar-footer">
             <button
               type="button"
               className={`admin-logout-button ${
@@ -174,11 +183,11 @@ export function AdminLayout() {
               onClick={logout}
               title="Logout"
             >
-              <span className={`inline-flex items-center ${sidebarCollapsed ? "" : "gap-2"} overflow-hidden`}>
+              <span className={`inline-flex items-center ${sidebarCollapsed ? "gap-2 lg:gap-0" : "gap-2"} overflow-hidden`}>
                 <LogoutRoundedIcon fontSize="small" />
                 <span
                   className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
-                    sidebarCollapsed ? "max-w-0 opacity-0" : "max-w-20 opacity-100"
+                    sidebarCollapsed ? "max-w-20 lg:max-w-0 lg:opacity-0" : "max-w-20 opacity-100"
                   }`}
                 >
                   Logout
@@ -187,22 +196,25 @@ export function AdminLayout() {
             </button>
           </div>
         </div>
-      </aside>
+      </Drawer>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="admin-workspace">
         <header className="admin-topbar">
-          <div className="flex min-h-[60px] items-center justify-between gap-3 px-4 md:px-6">
-            <div className="flex items-center gap-2">
+          <div className="admin-topbar-inner">
+            <div className="flex min-w-0 items-center gap-2">
               <button
                 type="button"
-                className="button-link button-link-secondary button-small lg:hidden"
+                className="button-link button-link-secondary button-small shrink-0 lg:hidden"
                 aria-label="Open sidebar"
+                aria-expanded={mobileSidebarOpen}
+                aria-controls="admin-navigation"
                 onClick={() => setMobileSidebarOpen(true)}
               >
                 <MenuRoundedIcon fontSize="small" />
               </button>
               <div className="admin-workspace-label">
-                <span>FVP Purepick</span>
+                <span>Workspace</span>
+                <span className="admin-breadcrumb-separator" aria-hidden="true">/</span>
                 <strong>{currentModule}</strong>
               </div>
             </div>
@@ -226,7 +238,7 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-auto">
+        <main className="admin-main" id="admin-main" tabIndex={-1}>
           <div className="admin-main-content">
             <Outlet />
           </div>

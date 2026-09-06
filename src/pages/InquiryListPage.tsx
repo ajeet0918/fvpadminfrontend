@@ -130,7 +130,7 @@ export function InquiryListPage() {
       {loading ? <LoadingState label="Loading inquiries..." /> : null}
 
       {!loading ? (
-        <DataTable isEmpty={list.length === 0} emptyText="No inquiries found.">
+        <DataTable recordCount={list.length} isEmpty={list.length === 0} emptyText="No inquiries found.">
           <thead>
             <tr>
               <th>Reference</th>

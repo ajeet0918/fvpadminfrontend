@@ -59,7 +59,7 @@ export function ReceiptCenterPage() {
       {loading ? <LoadingState label="Loading receipts..." /> : null}
 
       {!loading ? (
-        <DataTable isEmpty={items.length === 0} emptyText="No receipts available.">
+        <DataTable recordCount={items.length} isEmpty={items.length === 0} emptyText="No receipts available.">
           <thead>
             <tr>
               <th>Receipt Number</th>

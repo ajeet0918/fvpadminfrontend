@@ -212,7 +212,7 @@ function RecentOrders({ orders }: { orders: Order[] }) {
         description="Latest buyer orders and their current state."
         action={<Link className="text-action-link" to="/orders">View all orders</Link>}
       />
-      <DataTable isEmpty={orders.length === 0} emptyText="No orders have been created yet." className="dashboard-table">
+      <DataTable recordCount={orders.length} isEmpty={orders.length === 0} emptyText="No orders have been created yet." className="dashboard-table">
         <thead>
           <tr>
             <th>Order</th>

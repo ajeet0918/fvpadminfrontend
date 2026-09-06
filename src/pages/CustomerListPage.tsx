@@ -73,7 +73,7 @@ export function CustomerListPage() {
       {loading ? <LoadingState label="Loading customers..." /> : null}
 
       {!loading ? (
-        <DataTable isEmpty={visibleCustomers.length === 0} emptyText="No customers found.">
+        <DataTable recordCount={visibleCustomers.length} isEmpty={visibleCustomers.length === 0} emptyText="No customers found.">
           <thead>
             <tr>
               <th>ID</th>

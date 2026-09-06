@@ -20,7 +20,7 @@ export function FormSection({ title, subtitle, actions, children, className }: F
           {actions ? <div className="page-actions">{actions}</div> : null}
         </div>
       ) : null}
-      {children}
+      <div className="form-section-content">{children}</div>
     </section>
   );
 }
